@@ -1,0 +1,18 @@
+PROJECT(Projects)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+SET(CXX11_FLAGS -std=gnu++11)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS}")
+
+INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/include")
+
+
+# Set sources
+SET(GIVEN_SOURCE_CODE ${PROJECT_SOURCE_DIR}/src/ReadWrite/Image.cpp ${PROJECT_SOURCE_DIR}/src/ReadWrite/ReadImageHeader.cpp 
+	${PROJECT_SOURCE_DIR}/src/ReadWrite/ReadImage.cpp ${PROJECT_SOURCE_DIR}/src/ReadWrite/WriteImage.cpp)
+
+ADD_EXECUTABLE(Threshold ${PROJECT_SOURCE_DIR}/src/Threshold/Threshold.cpp ${GIVEN_SOURCE_CODE})
+ADD_EXECUTABLE(PA01_Equalization ${PROJECT_SOURCE_DIR}/src/PA01/Equalization.cpp ${GIVEN_SOURCE_CODE})
+
+add_custom_target(COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/images/ ${CMAKE_CURRENT_BINARY_DIR}/images)
+
