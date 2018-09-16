@@ -1,8 +1,10 @@
 #ifndef READWRITE_H
 #define READWRITE_H
 
-int readImageHeader(char[], int&, int&, int&, bool&);
-int readImage(char[], ImageType&);
-int writeImage(char[], ImageType&);
+int readImageHeader(const char * fname, int & N, int & M, int & Q, bool & type);
+
+int readImage(const char * fname, ImageType & image);
+
+int writeImage(const char * fname, const ImageType & image);
 
 #endif

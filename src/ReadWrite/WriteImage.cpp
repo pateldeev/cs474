@@ -4,49 +4,49 @@
 #include "Image.h"
 #include "ReadWrite.h"
 
-int writeImage(char fname[], ImageType& image){
- 
- int i, j;
- int N, M, Q;
- unsigned char *charImage;
- std::ofstream ofp;
+int writeImage(const char fname[], const ImageType & image) {
 
- image.getImageInfo(N, M, Q);
+    int i, j;
+    int N, M, Q;
+    unsigned char * charImage;
+    std::ofstream ofp;
 
- charImage = (unsigned char *) new unsigned char [M*N];
+    image.getImageInfo(N, M, Q);
 
- // convert the integer values to unsigned char
- int val;
+    charImage = (unsigned char *) new unsigned char [M * N];
 
- for(i=0; i<N; i++){
-   for(j=0; j<M; j++) {
-     image.getPixelVal(i, j, val);
-     charImage[i*M+j]=(unsigned char)val;
-   }
- }
- 
- ofp.open(fname, std::ios::out | std::ios::binary);
+    // convert the integer values to unsigned char
+    int val;
 
- if (!ofp) {
-   std::cout << "Can't open file: " << fname << std::endl;
-   exit(1);
- }
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < M; j++) {
+            image.getPixelVal(i, j, val);
+            charImage[i * M + j] = (unsigned char) val;
+        }
+    }
 
- ofp << "P5" << std::endl;
- ofp << M << " " << N << std::endl;
- ofp << Q << std::endl;
+    ofp.open(fname, std::ios::out | std::ios::binary);
 
- ofp.write( reinterpret_cast<char *>(charImage), (M*N)*sizeof(unsigned char));
+    if (!ofp) {
+        std::cout << "Can't open file: " << fname << std::endl;
+        exit(1);
+    }
 
- if (ofp.fail()) {
-   std::cout << "Can't write image " << fname << std::endl;
-   exit(0);
- }
+    ofp << "P5" << std::endl;
+    ofp << M << " " << N << std::endl;
+    ofp << Q << std::endl;
 
- ofp.close();
+    ofp.write(reinterpret_cast<char *> (charImage), (M * N) * sizeof (unsigned char));
 
- delete [] charImage;
+    if (ofp.fail()) {
+        std::cout << "Can't write image " << fname << std::endl;
+        exit(0);
+    }
 
- return 1;
+    ofp.close();
+
+    delete [] charImage;
+
+    return 1;
 
 }
