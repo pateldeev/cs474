@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <iomanip>
+
 #include "Image.h"
 #include "ReadWrite.h"
 
@@ -56,60 +58,65 @@ int main(int argc, char * argv[]) {
     return 0;
 }
 
+//calculates and returns unnormalized histogram representing the frequency of each gray scale value
+
 int * computeHistogram(const ImageType & img) {
 
     int numRows, numCols, maxVal;
-    img.getImageInfo(numRows, numCols, maxVal);
+    img.getImageInfo(numRows, numCols, maxVal); //get details of image
 
     //create histogram array and initialize to zero
     int * histogram = new int[maxVal + 1];
-    for (int i = 0; i <= maxVal; ++i) {
+    for (int i = 0; i <= maxVal; ++i)
         histogram[i] = 0;
-    }
 
     int tempVal;
-    for (int r = 0; r < numRows; ++r) {
+    //iterate through every pixel
+    for (int r = 0; r < numRows; ++r)
         for (int c = 0; c < numCols; ++c) {
-            img.getPixelVal(r, c, tempVal);
-            ++histogram[tempVal];
+            img.getPixelVal(r, c, tempVal); //read pizel value
+            ++histogram[tempVal]; //increment corresponding frequency in histogram
         }
-    }
 
     return histogram;
 }
 
+//normalizes histogram to get the pdf of the image - probability density funnction
+
 double * computeNormalized(const int * histogram, int size, int samples) {
 
-    double * normalized = new double[size];
+    double * normalized = new double[size]; //create array to hold cdf
 
-    for (int i = 0; i < size; ++i) {
-        normalized[i] = (double) histogram[i] / samples;
-    }
+    for (int i = 0; i < size; ++i)
+        normalized[i] = (double) histogram[i] / samples; //normalize each value by dividing by number of samples
 
     return normalized;
 }
+
+//computes cdf of image by making each term the sum of itself and the previous one - probability distribution function
 
 double * computeCDF(const double * data, int size) {
 
     double * cdf = new double[size];
 
     cdf[0] = data[0];
-    for (int i = 1; i < size; ++i) {
+    for (int i = 1; i < size; ++i)
         cdf[i] = cdf[i - 1] + data[i];
-    }
 
     return cdf;
 }
 
+//equalizes the given image using the given cdf
+
 void equalize(ImageType & img, const double * histogramCDF) {
     int numRows, numCols, maxVal;
-    img.getImageInfo(numRows, numCols, maxVal);
+    img.getImageInfo(numRows, numCols, maxVal); //get details of image
 
     int currVal;
-    for (int r = 0; r < numRows; ++r) {
+    //iterate through every pixel
+    for (int r = 0; r < numRows; ++r)
         for (int c = 0; c < numCols; ++c) {
-            img.getPixelVal(r, c, currVal);
-            img.setPixelVal(r, c, (int) (histogramCDF[currVal] * maxVal));
+            img.getPixelVal(r, c, currVal); //read each pixel value
+            img.setPixelVal(r, c, (int) (histogramCDF[currVal] * maxVal)); //change each pixel value using the cdf as the mapping
         }
-    }
 }
