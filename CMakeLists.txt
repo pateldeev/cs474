@@ -12,9 +12,13 @@ SET(GIVEN_SOURCE_CODE ${PROJECT_SOURCE_DIR}/src/ReadWrite/Image.cpp ${PROJECT_SO
 	${PROJECT_SOURCE_DIR}/src/ReadWrite/ReadImage.cpp ${PROJECT_SOURCE_DIR}/src/ReadWrite/WriteImage.cpp)
 
 ADD_EXECUTABLE(Threshold ${PROJECT_SOURCE_DIR}/src/Threshold/Threshold.cpp ${GIVEN_SOURCE_CODE})
+
+#PA01
 ADD_EXECUTABLE(PA01_Equalization ${PROJECT_SOURCE_DIR}/src/PA01/Equalization.cpp ${GIVEN_SOURCE_CODE})
 ADD_EXECUTABLE(PA01_Sampling ${PROJECT_SOURCE_DIR}/src/PA01/ImageSampling.cpp ${GIVEN_SOURCE_CODE})
 ADD_EXECUTABLE(PA01_Quantization ${PROJECT_SOURCE_DIR}/src/PA01/ImageQuantization.cpp ${GIVEN_SOURCE_CODE})
 
-add_custom_target(COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/images/ ${CMAKE_CURRENT_BINARY_DIR}/images)
+#PA02
+ADD_EXECUTABLE(PA02_Test ${PROJECT_SOURCE_DIR}/src/PA02/Test.cpp ${GIVEN_SOURCE_CODE} ${PROJECT_SOURCE_DIR}/src/PA02/HelperFunctions.cpp)
 
+file(COPY ${PROJECT_SOURCE_DIR}/images/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/images)
