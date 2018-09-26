@@ -61,23 +61,32 @@ void Helper::remapValues(ImageType & img) {
         }
 }
 
-void Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol) {
+int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol) {
     //get information about image and mask
     int imgRows, imgCols, maskRows, maskCols, levels;
     img.getImageInfo(imgRows, imgCols, levels);
     mask.getImageInfo(maskRows, maskCols, levels);
-    
+
     assert(maskCenterRow <= imgRows && maskCenterCol <= imgCols);
-    
-    int currVal, newVal;
+
+    int currVal, newVal = 0;
     img.getImageInfo(row, col, currVal);
-    
-    int weight;
-    for(int i = 0; i < maskRows; ++i)
-        for(int j = 0; j <maskCols; ++j){
-            mask.getPixelVal(i,j,weight);
-            
-            
+
+    int weight, value, rowLoc, colLoc, rowOffset, colOffset;
+    for (int i = 0; i < maskRows; ++i)
+        for (int j = 0; j < maskCols; ++j) {
+            mask.getPixelVal(i, j, weight);
+            rowOffset = i - maskCenterRow;
+            colOffset = j - maskCenterCol;
+
+            rowLoc = row + rowOffset;
+            colLoc = col + colOffset;
+
+            if (rowLoc >= 0 && rowLoc < imgRows && colLoc >= 0 && colLoc < imgCols) {
+                img.getPixelVal(rowLoc, colLoc, value);
+                newVal += (value * weight);
+            }
         }
-    
+
+    return newVal;
 }
