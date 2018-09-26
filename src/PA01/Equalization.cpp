@@ -111,6 +111,7 @@ double * computeCDF(const double * data, int size) {
 void equalize(ImageType & img, const double * histogramCDF) {
     int numRows, numCols, maxVal;
     img.getImageInfo(numRows, numCols, maxVal); //get details of image
+    --maxVal;
 
     int currVal;
     //iterate through every pixel
