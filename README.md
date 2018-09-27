@@ -17,3 +17,5 @@ make
   *  For image sampling (changing spacial resolution)
 * ./PA01_Quantization
   *  For image quantization (reducing gray levels)
+* ./PA02_Correlation
+  *  For running correlation with a given mask

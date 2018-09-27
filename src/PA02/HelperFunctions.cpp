@@ -6,6 +6,19 @@
 //private helper functions
 namespace {
 
+    int getSumOfPixels(const ImageType & img) {
+        int sum = 0, tempVal, rows, cols, levels;
+        img.getImageInfo(rows, cols, levels); //get image information
+
+        for (int r = 0; r < rows; ++r)
+            for (int c = 0; c < cols; ++c) {
+                img.getPixelVal(r, c, tempVal);
+                sum += tempVal; //add each pixel value to sum
+            }
+
+        return sum;
+    }
+
     int findMinPixelVal(const ImageType & img) {
         int rows, cols, levels;
         img.getImageInfo(rows, cols, levels); //get image information
@@ -79,7 +92,8 @@ void Helper::remapValues(ImageType & img) {
 }
 
 //function to apply mask at given location in image
-int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol) {
+
+int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol, bool divideByMaskSum) {
     //get information about image and mask
     int imgRows, imgCols, maskRows, maskCols, levels;
     img.getImageInfo(imgRows, imgCols, levels);
@@ -95,7 +109,7 @@ int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col,
     for (int i = 0; i < maskRows; ++i)
         for (int j = 0; j < maskCols; ++j) {
             mask.getPixelVal(i, j, weight); //get weight value
-            
+
             //find offsets from location
             rowOffset = i - maskCenterRow;
             colOffset = j - maskCenterCol;
@@ -111,6 +125,10 @@ int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col,
             }
         }
 
+    if(divideByMaskSum){
+        newVal /= getSumOfPixels(mask);
+    }
+    
     img.setPixelVal(row, col, newVal); //set new pixel value
     return newVal;
 }

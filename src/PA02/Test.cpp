@@ -21,7 +21,6 @@ int main(int argc, char * argv[]) {
     ImageType mask(3, 3, 100);
     randomlyPopulateImage(mask, 3, 3, 9, 1);
 
-
     Helper::printPixelValues(img);
     Helper::printPixelValues(mask);
 
