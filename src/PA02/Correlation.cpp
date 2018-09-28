@@ -20,9 +20,9 @@ int main(int argc, char * argv[]) {
         maskFile = argv[2];
         outputFile = argv[3];
     } else {
-        imgFile = "images/PA02/Correlation/Image.pgm";
-        maskFile = "images/PA02/Correlation/Pattern.pgm";
-        outputFile = "images/PA02/Correlation/Output.pgm";
+        imgFile = "images/PA02/correlation/Image.pgm";
+        maskFile = "images/PA02/correlation/Pattern.pgm";
+        outputFile = "images/PA02/correlation/Output.pgm";
     }
 
     std::cout << std::endl << "Image File: " << imgFile << std::endl << "Mask File: " << maskFile << std::endl << "Output File: " << outputFile << std::endl << std::endl;
@@ -58,5 +58,7 @@ int main(int argc, char * argv[]) {
     writeImage(outputFile.c_str(), img); //save output image
 
     std::cout << std::endl << "Program Done! See output image '" << outputFile << "' for results" << std::endl;
+
+    return 0;
 
 }
