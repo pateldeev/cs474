@@ -7,7 +7,7 @@ namespace Helper {
 
     //function to print pixel values. Useful for debugging
     void printPixelValues(const ImageType & img);
-    
+
     //function to linearly remap values in an image between
     void remapValues(ImageType & img);
 

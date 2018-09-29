@@ -125,10 +125,10 @@ int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col,
             }
         }
 
-    if(divideByMaskSum){
+    if (divideByMaskSum) {
         newVal /= getSumOfPixels(mask);
     }
-    
+
     img.setPixelVal(row, col, newVal); //set new pixel value
     return newVal;
 }
