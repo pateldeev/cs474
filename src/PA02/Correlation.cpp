@@ -34,6 +34,9 @@ int main(int argc, char * argv[]) {
     ImageType img(imgRows, imgCols, Q);
     readImage(imgFile.c_str(), img);
 
+    //create output image
+    ImageType outputImg(imgRows, imgCols, Q);
+
     //read mask file
     int maskRows, maskCols;
     readImageHeader(maskFile.c_str(), maskRows, maskCols, Q, type);
@@ -47,15 +50,18 @@ int main(int argc, char * argv[]) {
     std::cout << "Now applying mask to image. Note that a 0 will be used for any part of the mask that corresponds to areas outside the image boundaries " << std::endl;
 
     //apply mask to every pixel of image
+    int newVal;
     for (int r = 0; r < imgRows; ++r)
-        for (int c = 0; c < imgCols; ++c)
-            Helper::applyMask(img, mask, r, c, maskCenterRow, maskCenterCol);
+        for (int c = 0; c < imgCols; ++c) {
+            newVal = Helper::applyMask(img, mask, r, c, maskCenterRow, maskCenterCol);
+            outputImg.setPixelVal(r, c, newVal);
+        }
 
     std::cout << std::endl << "Done applying mask. Now remapping values to [0 255] and saving as output image! " << std::endl;
 
-    Helper::remapValues(img); //remap image values to [0 255] range
+    Helper::remapValues(outputImg); //remap image values to [0 255] range
 
-    writeImage(outputFile.c_str(), img); //save output image
+    writeImage(outputFile.c_str(), outputImg); //save output image
 
     std::cout << std::endl << "Program Done! See output image '" << outputFile << "' for results" << std::endl;
 

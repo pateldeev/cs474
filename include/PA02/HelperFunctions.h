@@ -11,8 +11,8 @@ namespace Helper {
     //function to linearly remap values in an image between
     void remapValues(ImageType & img);
 
-    //function that applies mask to image at location specfied by row and col. The maskCenterRow and maskCenterCol specify the center of the mask.
-    int applyMask(ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol, bool divideByMaskSum = true);
+    //function that applies mask to image at location specified by row and col and returns the new value. The maskCenterRow and maskCenterCol specify the center of the mask.
+    int applyMask(const ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol, bool normalizeMask = true);
 
 };
 

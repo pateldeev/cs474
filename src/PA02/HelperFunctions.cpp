@@ -51,7 +51,6 @@ namespace {
                 if (tempVal > maxVal)
                     maxVal = tempVal;
             }
-
         return maxVal;
     }
 }
@@ -91,9 +90,9 @@ void Helper::remapValues(ImageType & img) {
         }
 }
 
-//function to apply mask at given location in image
+//function to apply mask at given location in image and return new value
 
-int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol, bool divideByMaskSum) {
+int Helper::applyMask(const ImageType & img, const ImageType & mask, int row, int col, unsigned int maskCenterRow, unsigned int maskCenterCol, bool normalizeMask) {
     //get information about image and mask
     int imgRows, imgCols, maskRows, maskCols, levels;
     img.getImageInfo(imgRows, imgCols, levels);
@@ -125,10 +124,9 @@ int Helper::applyMask(ImageType & img, const ImageType & mask, int row, int col,
             }
         }
 
-    if (divideByMaskSum) {
+    if (normalizeMask) {
         newVal /= getSumOfPixels(mask);
     }
 
-    img.setPixelVal(row, col, newVal); //set new pixel value
     return newVal;
 }

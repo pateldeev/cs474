@@ -6,7 +6,7 @@
 
 
 //helper function to apply mask and save result after normalization
-void applyMask(ImageType & img, const ImageType & mask, const std::string & outputFile);
+void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile);
 
 //helper function to generate Prewitt masks
 void generatePrewitt(ImageType & maskX, ImageType & maskY);
@@ -69,9 +69,9 @@ int main(int argc, char * argv[]) {
         ImageType mask(3, 3, 255);
         generateLaplacian(mask);
 
-        Helper::printPixelValues(mask);
-
         applyMask(img, mask, outputFile); //apply laplacian and save result        
+
+        std::cout << std::endl << "Done output image saved!" << std::endl;
     }
 
     return 0;
@@ -79,21 +79,29 @@ int main(int argc, char * argv[]) {
 
 //helper function to apply mask and save result after normalization
 
-void applyMask(ImageType & img, const ImageType & mask, const std::string & outputFile) {
+void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile) {
 
-    //get information about image and mask
-    int imgRows, imgCols, maskRows, maskCols, levels;
+    //get information about image
+    int imgRows, imgCols, levels;
     img.getImageInfo(imgRows, imgCols, levels);
+
+    ImageType outputImg(imgRows, imgCols, levels); //create output image
+
+    //get inforamtion about mask
+    int maskRows, maskCols;
     mask.getImageInfo(maskRows, maskCols, levels);
 
-    //apply mask at every pixel location
+    //apply mask at every pixel location and store result in output image
+    int newVal;
     for (int r = 0; r < imgRows; ++r)
-        for (int c = 0; c < imgCols; ++c)
-            Helper::applyMask(img, mask, r, c, (int) (maskRows / 2), (int) (maskCols / 2), false);
+        for (int c = 0; c < imgCols; ++c) {
+            newVal = Helper::applyMask(img, mask, r, c, (int) (maskRows / 2), (int) (maskCols / 2), false);
+            outputImg.setPixelVal(r, c, newVal);
+        }
 
-    Helper::remapValues(img); //remap values into [0,255]
+    Helper::remapValues(outputImg); //remap values into [0,255]
 
-    writeImage(outputFile.c_str(), img); //save output image
+    writeImage(outputFile.c_str(), outputImg); //save output image
 }
 
 //helper function to generate Prewitt masks
