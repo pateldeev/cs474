@@ -6,7 +6,7 @@
 
 
 //helper function to apply mask and save result after normalization
-void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile);
+void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile, bool takeAbs = false);
 
 //helper function to generate Prewitt masks
 void generatePrewitt(ImageType & maskX, ImageType & maskY);
@@ -52,8 +52,16 @@ int main(int argc, char * argv[]) {
     if (choice == 1) {
         std::cout << std::endl << "Applying Prewitt masks. " << std::endl;
 
+        //generate Prewitt masks
         ImageType maskX(3, 3, 255);
         ImageType maskY(3, 3, 255);
+        generatePrewitt(maskX, maskY);
+        
+
+        std::cout << std::endl << "X";
+        Helper::printPixelValues(maskX);
+        std::cout << std::endl << "Y";
+        Helper::printPixelValues(maskY);
 
 
     } else if (choice == 2) {
@@ -62,14 +70,21 @@ int main(int argc, char * argv[]) {
         ImageType maskX(3, 3, 255);
         ImageType maskY(3, 3, 255);
 
+        generateSobel(maskX, maskY);
+
+        std::cout << std::endl << "X";
+        Helper::printPixelValues(maskX);
+        std::cout << std::endl << "Y";
+        Helper::printPixelValues(maskY);
+
     } else {
         std::cout << std::endl << "Applying Laplacian mask. " << std::endl;
 
-        //generate laplacian mask      
+        //generate Laplacian mask      
         ImageType mask(3, 3, 255);
         generateLaplacian(mask);
 
-        applyMask(img, mask, outputFile); //apply laplacian and save result        
+        applyMask(img, mask, outputFile); //apply Laplacian and save result        
 
         std::cout << std::endl << "Done output image saved!" << std::endl;
     }
@@ -77,26 +92,30 @@ int main(int argc, char * argv[]) {
     return 0;
 }
 
-//helper function to apply mask and save result after normalization
+//helper function to apply mask at every point and save result after normalization
 
-void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile) {
+void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile, bool takeAbs) {
 
-    //get information about image
+    //get information of image
     int imgRows, imgCols, levels;
     img.getImageInfo(imgRows, imgCols, levels);
 
     ImageType outputImg(imgRows, imgCols, levels); //create output image
 
-    //get inforamtion about mask
+    //get information of mask
     int maskRows, maskCols;
     mask.getImageInfo(maskRows, maskCols, levels);
 
     //apply mask at every pixel location and store result in output image
-    int newVal;
+    double newVal;
     for (int r = 0; r < imgRows; ++r)
         for (int c = 0; c < imgCols; ++c) {
             newVal = Helper::applyMask(img, mask, r, c, (int) (maskRows / 2), (int) (maskCols / 2), false);
-            outputImg.setPixelVal(r, c, newVal);
+
+            if (takeAbs)
+                newVal = abs(newVal); //take absolute value if instructed
+
+            outputImg.setPixelVal(r, c, (int) newVal); //store new value
         }
 
     Helper::remapValues(outputImg); //remap values into [0,255]
@@ -107,13 +126,65 @@ void applyMask(const ImageType & img, const ImageType & mask, const std::string 
 //helper function to generate Prewitt masks
 
 void generatePrewitt(ImageType & maskX, ImageType & maskY) {
+    int val;
 
+    val = 0;
+    maskX.setPixelVal(0, 1, val);
+    maskX.setPixelVal(1, 1, val);
+    maskX.setPixelVal(2, 1, val);
+    maskY.setPixelVal(1, 0, val);
+    maskY.setPixelVal(1, 1, val);
+    maskY.setPixelVal(1, 2, val);
+
+    val = 1;
+    maskX.setPixelVal(0, 2, val);
+    maskX.setPixelVal(1, 2, val);
+    maskX.setPixelVal(2, 2, val);
+    maskY.setPixelVal(2, 0, val);
+    maskY.setPixelVal(2, 1, val);
+    maskY.setPixelVal(2, 2, val);
+
+    val = -1;
+    maskX.setPixelVal(0, 0, val);
+    maskX.setPixelVal(1, 0, val);
+    maskX.setPixelVal(2, 0, val);
+    maskY.setPixelVal(0, 0, val);
+    maskY.setPixelVal(0, 1, val);
+    maskY.setPixelVal(0, 2, val);
 }
 
 //helper function to generate Sobel masks
 
 void generateSobel(ImageType & maskX, ImageType & maskY) {
+    int val;
 
+    val = 0;
+    maskX.setPixelVal(0, 1, val);
+    maskX.setPixelVal(1, 1, val);
+    maskX.setPixelVal(2, 1, val);
+    maskY.setPixelVal(1, 0, val);
+    maskY.setPixelVal(1, 1, val);
+    maskY.setPixelVal(1, 2, val);
+
+    val = 1;
+    maskX.setPixelVal(0, 2, val);
+    maskX.setPixelVal(2, 2, val);
+    maskY.setPixelVal(2, 0, val);
+    maskY.setPixelVal(2, 2, val);
+
+    val = 2;
+    maskX.setPixelVal(1, 2, val);
+    maskY.setPixelVal(2, 1, val);
+
+    val = -1;
+    maskX.setPixelVal(0, 0, val);
+    maskX.setPixelVal(2, 0, val);
+    maskY.setPixelVal(0, 0, val);
+    maskY.setPixelVal(0, 2, val);
+
+    val = -2;
+    maskX.setPixelVal(1, 0, val);
+    maskY.setPixelVal(0, 1, val);
 }
 
 //helper function to generate Laplacian mask
