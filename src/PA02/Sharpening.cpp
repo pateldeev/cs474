@@ -1,12 +1,17 @@
 #include "PA02/HelperFunctions.h"
 #include "ReadWrite.h"
 
+#include <math.h> 
 #include <iostream>
 #include <string>
+#include <valarray>
 
 
-//helper function to apply mask and save result after normalization
-void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile, bool takeAbs = false);
+//helper function to apply mask and save result to outputImg after normalization
+void applyMask(const ImageType & img, const ImageType & mask, ImageType & outputImg, bool takeAbs = false);
+
+//helper function to find magnitude image given X and Y images from gradient operators
+void calculateMagnitudeImg(const ImageType & imgX, const ImageType & imgY, ImageType & imgMag);
 
 //helper function to generate Prewitt masks
 void generatePrewitt(ImageType & maskX, ImageType & maskY);
@@ -52,58 +57,76 @@ int main(int argc, char * argv[]) {
     if (choice == 1) {
         std::cout << std::endl << "Applying Prewitt masks. " << std::endl;
 
-        //generate Prewitt masks
-        ImageType maskX(3, 3, 255);
-        ImageType maskY(3, 3, 255);
-        generatePrewitt(maskX, maskY);
-        
+        std::string outputFileX = outputFile, outputFileY = outputFile;
+        outputFileX.insert(outputFileX.find('.'), "_X");
+        outputFileY.insert(outputFileY.find('.'), "_Y");
 
-        std::cout << std::endl << "X";
-        Helper::printPixelValues(maskX);
-        std::cout << std::endl << "Y";
-        Helper::printPixelValues(maskY);
+        ImageType maskX(3, 3, 255);
+        ImageType outputImgX(imgRows, imgCols, Q);
+        ImageType maskY(3, 3, 255);
+        ImageType outputImgY(imgRows, imgCols, Q);
+        ImageType outputImgMag(imgRows, imgCols, Q);
+
+        generatePrewitt(maskX, maskY); //generate Prewitt masks
+
+        applyMask(img, maskX, outputImgX); //apply X mask
+        applyMask(img, maskY, outputImgY); //apply Y mask
+
+        calculateMagnitudeImg(outputImgX, outputImgY, outputImgMag); //calculate magnitude image
+
+        //save output images
+        writeImage(outputFileX.c_str(), outputImgX);
+        writeImage(outputFileY.c_str(), outputImgY);
+        writeImage(outputFile.c_str(), outputImgMag);
 
 
     } else if (choice == 2) {
         std::cout << std::endl << "Applying Sobel masks. " << std::endl;
 
+        std::string outputFileX = outputFile, outputFileY = outputFile;
+        outputFileX.insert(outputFileX.find('.'), "_X");
+        outputFileY.insert(outputFileY.find('.'), "_Y");
+
         ImageType maskX(3, 3, 255);
+        ImageType outputImgX(imgRows, imgCols, Q);
         ImageType maskY(3, 3, 255);
+        ImageType outputImgY(imgRows, imgCols, Q);
+        ImageType outputImgMag(imgRows, imgCols, Q);
 
-        generateSobel(maskX, maskY);
+        generateSobel(maskX, maskY); //generate Sobel masks
 
-        std::cout << std::endl << "X";
-        Helper::printPixelValues(maskX);
-        std::cout << std::endl << "Y";
-        Helper::printPixelValues(maskY);
+        applyMask(img, maskX, outputImgX); //apply X mask
+        applyMask(img, maskY, outputImgY); //apply Y mask
 
+        calculateMagnitudeImg(outputImgX, outputImgY, outputImgMag); //calculate magnitude image
+
+        writeImage(outputFileX.c_str(), outputImgX);
+        writeImage(outputFileY.c_str(), outputImgY);
+        writeImage(outputFile.c_str(), outputImgMag);
     } else {
         std::cout << std::endl << "Applying Laplacian mask. " << std::endl;
 
-        //generate Laplacian mask      
         ImageType mask(3, 3, 255);
-        generateLaplacian(mask);
+        ImageType outputImg(imgRows, imgCols, Q);
+        generateLaplacian(mask); //generate Laplacian mask      
 
-        applyMask(img, mask, outputFile); //apply Laplacian and save result        
+        applyMask(img, mask, outputImg); //apply Laplacian and save result        
 
-        std::cout << std::endl << "Done output image saved!" << std::endl;
+        writeImage(outputFile.c_str(), outputImg); //save output image
     }
+
+    std::cout << std::endl << "Done output image saved!" << std::endl;
 
     return 0;
 }
 
-//helper function to apply mask at every point and save result after normalization
+//helper function to apply mask at every point and save result to outputImg after normalization
 
-void applyMask(const ImageType & img, const ImageType & mask, const std::string & outputFile, bool takeAbs) {
+void applyMask(const ImageType & img, const ImageType & mask, ImageType & outputImg, bool takeAbs) {
 
-    //get information of image
-    int imgRows, imgCols, levels;
+    //get information of image and mask
+    int imgRows, imgCols, maskRows, maskCols, levels;
     img.getImageInfo(imgRows, imgCols, levels);
-
-    ImageType outputImg(imgRows, imgCols, levels); //create output image
-
-    //get information of mask
-    int maskRows, maskCols;
     mask.getImageInfo(maskRows, maskCols, levels);
 
     //apply mask at every pixel location and store result in output image
@@ -119,9 +142,26 @@ void applyMask(const ImageType & img, const ImageType & mask, const std::string 
         }
 
     Helper::remapValues(outputImg); //remap values into [0,255]
-
-    writeImage(outputFile.c_str(), outputImg); //save output image
 }
+
+//helper function to find magnitude image given X and Y images from gradient operators
+
+void calculateMagnitudeImg(const ImageType & imgX, const ImageType & imgY, ImageType & imgMag) {
+    //get information of image
+    int imgRows, imgCols, levels;
+    imgMag.getImageInfo(imgRows, imgCols, levels);
+
+    //calculate magnitude at every pixel value
+    int xVal, yVal, magnitude;
+    for (int r = 0; r < imgRows; ++r)
+        for (int c = 0; c < imgCols; ++c) {
+            imgX.getPixelVal(r, c, xVal);
+            imgY.getPixelVal(r, c, yVal);
+            magnitude = (int) std::sqrt(xVal * xVal + yVal * yVal);
+            imgMag.setPixelVal(r, c, magnitude);
+        }
+}
+
 
 //helper function to generate Prewitt masks
 
