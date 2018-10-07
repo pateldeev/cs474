@@ -78,7 +78,7 @@ int main(int argc, char * argv[]){
 	ImageType am_7x7(7, 7, Q), gm_7x7(7, 7, Q);
 	for(int i = 0; i < 7; ++i){
 		for(int j = 0; j < 7; ++j){
-			am_7x7.setPixelVal(i, j, mask_7x7[i][j]);
+			am_7x7.setPixelVal(i, j, avg_7x7[i][j]);
 			gm_7x7.setPixelVal(i, j, mask_7x7[i][j]);
 		}
 	}
@@ -87,7 +87,7 @@ int main(int argc, char * argv[]){
 	ImageType am_15x15(15, 15, Q), gm_15x15(15, 15, Q);
 	for(int i = 0; i < 15; ++i){
 		for(int j = 0; j < 15; ++j){
-			am_15x15.setPixelVal(i, j, mask_15x15[i][j]);
+			am_15x15.setPixelVal(i, j, avg_15x15[i][j]);
 			gm_15x15.setPixelVal(i, j, mask_15x15[i][j]);
 		}
 	}
