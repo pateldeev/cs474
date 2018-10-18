@@ -4,8 +4,6 @@
 #include <math.h> 
 #include <iostream>
 #include <string>
-#include <valarray>
-
 
 //helper function to apply mask and save result to outputImg after normalization
 void applyMask(const ImageType & img, const ImageType & mask, ImageType & outputImg, bool takeAbs = false);
