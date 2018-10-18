@@ -19,3 +19,7 @@ make
   *  For image quantization (reducing gray levels)
 * ./PA02_Correlation
   *  For running correlation with a given mask
+* ./PA02_Spatial
+  *  For running spatial filtering with a given mask
+* ./PA02_Median
+  *  For running median filtering with a given mask
