@@ -6,7 +6,6 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS}")
 
 INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/include")
 
-
 # Set sources
 SET(GIVEN_SOURCE_CODE ${PROJECT_SOURCE_DIR}/src/ReadWrite/Image.cpp ${PROJECT_SOURCE_DIR}/src/ReadWrite/ReadImageHeader.cpp 
 	${PROJECT_SOURCE_DIR}/src/ReadWrite/ReadImage.cpp ${PROJECT_SOURCE_DIR}/src/ReadWrite/WriteImage.cpp)

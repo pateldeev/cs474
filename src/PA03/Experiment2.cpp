@@ -1,5 +1,7 @@
 #include "ReadWrite.h"
-#include "PA03/fft.h"
+
+#include "PA03/fft.c"
+#include "PA03/fft2D.c"
 
 #include <iostream>
 #include <string>

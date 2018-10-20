@@ -1,5 +1,5 @@
-#ifndef FFT_H
-#define FFT_H
+#ifndef FFT_C
+#define FFT_C
 
 /* 
 
@@ -72,8 +72,6 @@ inline void fft(float data[], unsigned long nn, int isign){
 }
 
 #undef SWAP
-
 /* (C) Copr. 1986-92 Numerical Recipes Software 0#Y". */
+
 #endif
-
-/* (C) Copr. 1986-92 Numerical Recipes Software 0#Y". */
