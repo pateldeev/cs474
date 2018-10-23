@@ -16,13 +16,13 @@ void partB(void);
 //function that implements part C
 void partC(void);
 
-//generates required signal for part A(with 0 for imaginary part)
+//generates required signal for part A (with 0 for imaginary part)
 void generateSignalPartA(std::vector<float> & signal);
 
-//generates required signal for part B(with 0 for imaginary part)
+//generates required signal for part B (with 0 for imaginary part)
 void generateSignalPartB(std::vector<float> & signal);
 
-//generates required signal for part C(with 0 for imaginary part)
+//generates required signal for part C (with 0 for imaginary part)
 void generateSignalPartC(std::vector<float> & signal);
 
 //scales signal by required factor
@@ -44,12 +44,15 @@ int main(int argc, char * argv[]) {
 
     std::cout << std::endl << std::endl << "PART A|||||||||||||||||||" << std::endl;
     partA();
+    std::cout << std::endl << std::endl << "PART A Done|||||||||||||||||||" << std::endl;
 
     std::cout << std::endl << std::endl << "PART B|||||||||||||||||||" << std::endl;
     partB();
+    std::cout << std::endl << std::endl << "PART B Done|||||||||||||||||||" << std::endl;
 
     std::cout << std::endl << std::endl << "PART C|||||||||||||||||||" << std::endl;
     partC();
+    std::cout << std::endl << std::endl << "PART C Done|||||||||||||||||||" << std::endl;
 
     std::cout << std::endl << std::endl;
     return 0;
@@ -75,14 +78,14 @@ void partA(void) {
 }
 
 void partB(void) {
-    //generate required dataset and print it for verification
+    //generate required dataset
     std::vector<float> signal;
     generateSignalPartB(signal);
 
     //save signal for verification purposes - only save real part
     saveSignal(signal, "Ex1PtB_original_real.dat", true, false);
 
-    for (unsigned int i = 0; i < signal.size(); i += 4)
+    for (unsigned int i = 2; i < signal.size(); i += 4)
         signal[i] *= -1; //invert every other real value to shift fft result to correct viewing frame
 
     //compute forward fft with help of given function
@@ -97,7 +100,25 @@ void partB(void) {
 }
 
 void partC(void) {
-    std::cout << "Part C stuff";
+    //generate required dataset and print it for verification
+    std::vector<float> signal;
+    generateSignalPartC(signal);
+
+    //save signal for verification purposes - only save real part
+    saveSignal(signal, "Ex1PtC_original_real.dat", true, false);
+
+    for (unsigned int i = 2; i < signal.size(); i += 4)
+        signal[i] *= -1; //invert every other real value to shift fft result to correct viewing frame
+
+    //compute forward fft with help of given function
+    fft(&signal[0] - 1, signal.size() / 2, -1);
+    scaleSignal(signal, float(1) / (signal.size() / 2)); //scale by 1/N factor manually
+
+    //save real, imaginary, magnitude, and phase parts of signal for verifcation
+    saveSignal(signal, "Ex1PtC_fft_real.dat", true, false);
+    saveSignal(signal, "Ex1PtC_fft_imaginary.dat", false, true);
+    saveSignalCharacterisitic(signal, "Ex1PtC_fft_magnitude.dat");
+    saveSignalCharacterisitic(signal, "Ex1PtC_fft_phase.dat", true);
 }
 
 void generateSignalPartA(std::vector<float> & signal) {
@@ -130,7 +151,21 @@ void generateSignalPartB(std::vector<float> & signal) {
 }
 
 void generateSignalPartC(std::vector<float> & signal) {
+    signal.clear();
+    std::ifstream inputFile("images/PA03/Experiment1/PartC/Rect_128.dat");
+    if (!inputFile.is_open()) {
+        std::cerr << "Could not open input file for Part C!" << std::endl;
+        return;
+    }
 
+    //get each data value in file until the end.
+    std::string tempLine;
+    std::getline(inputFile, tempLine); //get first line
+    while (!inputFile.eof()) {
+        signal.push_back(std::stof(tempLine)); //real part from file
+        signal.push_back(0); //set imaginary part to 0
+        std::getline(inputFile, tempLine); //get next line
+    }
 }
 
 void scaleSignal(std::vector<float> & signal, const float scaleFactor) {
