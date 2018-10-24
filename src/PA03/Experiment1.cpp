@@ -96,7 +96,7 @@ void partB(void) {
     saveSignal(signal, "Ex1PtB_fft_real.dat", true, false);
     saveSignal(signal, "Ex1PtB_fft_imaginary.dat", false, true);
     saveSignalCharacterisitic(signal, "Ex1PtB_fft_magnitude.dat");
-    saveSignalCharacterisitic(signal, "Ex1PtB_fft_phase.dat", true);
+    saveSignalCharacterisitic(signal, "Ex1PtB_fft_phase.dat", false);
 }
 
 void partC(void) {
@@ -118,7 +118,7 @@ void partC(void) {
     saveSignal(signal, "Ex1PtC_fft_real.dat", true, false);
     saveSignal(signal, "Ex1PtC_fft_imaginary.dat", false, true);
     saveSignalCharacterisitic(signal, "Ex1PtC_fft_magnitude.dat");
-    saveSignalCharacterisitic(signal, "Ex1PtC_fft_phase.dat", true);
+    saveSignalCharacterisitic(signal, "Ex1PtC_fft_phase.dat", false);
 }
 
 void generateSignalPartA(std::vector<float> & signal) {
@@ -136,7 +136,7 @@ void generateSignalPartA(std::vector<float> & signal) {
 
 void generateSignalPartB(std::vector<float> & signal) {
     const int N = 128, u = 8;
-    signal.resize(N * 2);
+    signal.resize(2 * N);
 
     //generator function for signal
     auto signalGenerator = [&N, &u](int sampleNum) ->float {
