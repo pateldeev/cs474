@@ -62,9 +62,8 @@ inline void fft2D(unsigned long N, unsigned long M, float real_Fuv[], float imag
 
         //store result in original arrays
         i = 0;
-        for (unsigned int r = 0; r < N; ++r, i += 2) {
+        for (unsigned int r = 0; r < N; ++r, i += 2)
             setValue(r, c, tempArr[i], tempArr[i + 1]);
-        }
     }
 }
 
