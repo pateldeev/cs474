@@ -1,6 +1,6 @@
 #include "ReadWrite.h"
 
-#include "PA03/fft.c"
+#include "FFT/fft.c"
 
 #include <iostream>
 #include <fstream>

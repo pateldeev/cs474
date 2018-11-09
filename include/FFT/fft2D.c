@@ -1,7 +1,7 @@
 #ifndef FFT2D_C
 #define FFT2D_C
 
-#include "PA03/fft.c"
+#include "FFT/fft.c"
 
 #include <cstdio>
 #include <vector>
