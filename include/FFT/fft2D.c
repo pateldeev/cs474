@@ -5,6 +5,7 @@
 
 #include <cstdio>
 #include <vector>
+#include <assert.h>
 
 /* Function to implement 2D fft via given 1D fft function.
  * Used to calculate the DFT of an NxM image with N rows and M cols.
@@ -14,6 +15,9 @@
  * isign: use -1 for forward DFT and 1 for inverse DFT 
  */
 inline void fft2D(unsigned long N, unsigned long M, float real_Fuv[], float imag_Fuv[], int isign) {
+    assert((N & (N - 1)) == 0 && (M & (M - 1)) == 0); //ensure N and M are powers of two
+    assert(isign == -1 || isign == 1);
+
     //helpers to get and set values by row and column number
     auto getReal = [&M, real_Fuv](unsigned int r, unsigned int c) ->float {
         return real_Fuv[r * M + c];
