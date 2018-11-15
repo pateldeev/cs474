@@ -7,16 +7,22 @@
 #include <string>
 #include <vector>
 
-void changeRow(ImageType & img, int row, int colMin, int colMax, int newVal = 0) {
-    for (int c = colMin; c <= colMax; ++c)
-        if (c < 239 || c > 273)
-            img.setPixelVal(row, c, newVal);
+//function to change the values in a specific row of an image over the given range of columns
+
+void changeRow(ImageType & imgR, ImageType & imgI, int row, int colMin, int colMax, int newValR = 0, int newValI = 0) {
+    for (int c = colMin; c <= colMax; ++c) {
+        imgR.setPixelVal(row, c, newValR);
+        imgI.setPixelVal(row, c, newValI);
+    }
 }
 
-void changeCol(ImageType & img, int col, int rowMin, int rowMax, int newVal = 0) {
-    for (int r = rowMin; r <= rowMax; ++r)
-        if (r < 239 || r > 273)
-            img.setPixelVal(r, col, newVal);
+//function to change the values in a specific column of an image over the given range of rows
+
+void changeCol(ImageType & imgR, ImageType & imgI, int col, int rowMin, int rowMax, int newValR = 0, int newValI = 0) {
+    for (int r = rowMin; r <= rowMax; ++r) {
+        imgR.setPixelVal(r, col, newValR);
+        imgI.setPixelVal(r, col, newValI);
+    }
 }
 
 int main(int argc, char * argv[]) {
@@ -37,52 +43,55 @@ int main(int argc, char * argv[]) {
         for (int c = 0; c < imgCols; ++c)
             imgI.setPixelVal(r, c, 0);
 
-    Helper::applyFFT2D(imgR, imgI); //apply forward FFT
-
-    //get spectrum
+    //apply forward FFT and get and save spectrum
+    Helper::applyFFT2D(imgR, imgI);
     ImageType imgSpectrum(imgRows, imgCols, Q);
     Helper::getSpectrum(imgSpectrum, imgR, imgI);
+    ImageType spectrumOriginal(imgSpectrum);
+    Helper::remapValues(spectrumOriginal);
+    writeImage("images/PA04/Experiment1/boy_noisy_spectrum.pgm", spectrumOriginal);
 
-    changeRow(imgSpectrum, 240, 0, 511);
-    changeRow(imgR, 240, 0, 511);
-    changeRow(imgI, 240, 0, 511);
+    //black out areas of rows were noise is prevalent
+    int cutOffBottom = 235, cutOffTop = 278;
+    std::vector<int> remove = {241, 240, 254, 255, 256, 257, 271, 272};
+    for (int r : remove) {
+        changeRow(imgSpectrum, imgSpectrum, r, 0, cutOffBottom);
+        changeRow(imgSpectrum, imgSpectrum, r, cutOffTop, imgRows - 1);
+        changeRow(imgR, imgI, r, 0, cutOffBottom);
+        changeRow(imgR, imgI, r, cutOffTop, imgRows - 1);
+    }
 
-    changeRow(imgSpectrum, 256, 0, 511);
-    changeRow(imgR, 256, 0, 511);
-    changeRow(imgI, 256, 0, 511);
+    //black out areas of columns were noise is prevalent
+    remove = {253, 254, 255, 256, 257, 258};
+    for (int c : remove) {
+        changeCol(imgSpectrum, imgSpectrum, c, 0, cutOffBottom);
+        changeCol(imgSpectrum, imgSpectrum, c, cutOffTop, imgCols - 1);
+        changeCol(imgR, imgI, c, 0, cutOffBottom);
+        changeCol(imgR, imgI, c, cutOffTop, imgCols - 1);
+    }
 
-    changeRow(imgSpectrum, 272, 0, 511);
-    changeRow(imgR, 272, 0, 511);
-    changeRow(imgI, 272, 0, 511);
+    //display filtered spectrum for visualization
+    ImageType spectrumFiltered(imgSpectrum);
+    Helper::remapValues(spectrumFiltered);
+    writeImage("images/PA04/Experiment1/boy_filtered_spectrum.pgm", spectrumFiltered);
 
-    changeCol(imgSpectrum, 256, 0, 511);
-    changeCol(imgR, 256, 0, 511);
-    changeCol(imgI, 256, 0, 511);
-
-    //display spectrum for visualization
-    ImageType dispSpectrum(imgSpectrum);
-    Helper::remapValues(dispSpectrum);
-    writeImage("images/PA04/Experiment1/boy_spectrum.pgm", dispSpectrum);
-
-
-    Helper::applyFFT2D(imgR, imgI, false); //apply inverse FFT
+    //apply inverse FFT and save filtered image
+    Helper::applyFFT2D(imgR, imgI, false);
     Helper::remapValues(imgR);
     writeImage("images/PA04/Experiment1/boy_filtered.pgm", imgR);
 
-
-
+    //apply 7x7 Gaussian mask in spatial domain to original and save result as required
     Helper::GaussianFilterSize filterSize;
-    //apply 7x7 Gaussian mask in spatial domain and save result as required
     ImageType img_7x7Gaussian(img);
     filterSize = Helper::GaussianFilterSize::small;
     Helper::applyGaussianSpatial(img_7x7Gaussian, filterSize);
     writeImage("images/PA04/Experiment1/boy_7x7Gaussian.pgm", img_7x7Gaussian);
 
-    //apply 15x15 Gaussian mask in spatial domain and save result as required
+    //apply 15x15 Gaussian mask in spatial domain to original and save result as required
     ImageType img_15x15Gaussian(img);
     filterSize = Helper::GaussianFilterSize::large;
     Helper::applyGaussianSpatial(img_15x15Gaussian, filterSize);
     writeImage("images/PA04/Experiment1/boy_15x15Gaussian.pgm", img_15x15Gaussian);
 
-    return 0;
+    return 0; //done
 }
