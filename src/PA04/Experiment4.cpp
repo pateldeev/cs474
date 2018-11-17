@@ -1,4 +1,9 @@
+#include "ReadWrite.h"
 #include "PA04/HelperFunctions.h"
+#include "PA04/ImageComplex.h"
+
+#include <iostream>
+#include <string>
 
 #include <iostream>
 

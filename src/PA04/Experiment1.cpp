@@ -78,8 +78,7 @@ int main(int argc, char * argv[]) {
     img.getSpectrum(spectrumFiltered);
     writeImage("images/PA04/Experiment1/boy_filtered_spectrum.pgm", spectrumFiltered);
 
-    //apply inverse FFT 
-    img.applyFFT(false);
+    img.applyFFT(false); //apply inverse FFT
 
     //save real part of filtered image
     ImageType imgFilteredR(imgRows, imgCols, Q), imgFilteredI(imgRows, imgCols, Q);
