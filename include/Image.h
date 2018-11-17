@@ -7,7 +7,7 @@ class ImageType {
 public:
     ImageType(void);
     ImageType(int tmpN, int tmpM, int tmpQ);
-    ImageType(ImageType & oldImage);
+    ImageType(const ImageType & oldImage);
     ~ImageType(void);
 
     void getImageInfo(int & rows, int & cols, int & levels) const;

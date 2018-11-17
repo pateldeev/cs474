@@ -23,7 +23,7 @@ ImageType::ImageType(int tmpN, int tmpM, int tmpQ) {
     }
 }
 
-ImageType::ImageType(ImageType & oldImage) {
+ImageType::ImageType(const ImageType & oldImage) {
     int i, j;
 
     N = oldImage.N;

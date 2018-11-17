@@ -2,12 +2,8 @@
 #define HELPERFUNCTIONS_H
 
 #include "Image.h"
-#include "FFT/fft2D.c"
 
 namespace Helper {
-
-    //function to print pixel values. Useful for debugging
-    void printPixelValues(const ImageType & imgR, const ImageType & imgI);
 
     //function to linearly remap values in an image to 8-bit range (0-255)
     void remapValues(ImageType & img);
@@ -21,14 +17,7 @@ namespace Helper {
     };
 
     //function to apply Gaussian filtering in the spatial domain
-    void applyGaussianSpatial(ImageType & img, const GaussianFilterSize & size);
-
-    //function to apply 2D fft to ImageType variables. 
-    //Note the function internal shifts the magnitude to center and back
-    void applyFFT2D(ImageType & imgR, ImageType & imgI, bool forward = true);
-
-    //function to return spectrum of image - applies log transformation: log(1+val)
-    void getSpectrum(ImageType & spectrum, const ImageType & imgR, const ImageType & imgI);
+    void applyGaussianSpatial(ImageType & img, const GaussianFilterSize & size, bool normalizeValue = true);
 };
 
 #endif
