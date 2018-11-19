@@ -6,7 +6,7 @@
 #include <vector>
 #include <assert.h>
 
-ImageComplex::ImageComplex(unsigned int rows, unsigned int cols) : m_rows(rows), m_cols(cols), m_dataR(nullptr), m_dataI(nullptr) {
+ImageComplex::ImageComplex(int rows, int cols) : m_rows(rows), m_cols(cols), m_dataR(nullptr), m_dataI(nullptr) {
     //allocate space for real and imaginary parts of data
     m_dataR = new float* [m_rows];
     m_dataI = new float* [m_rows];
@@ -23,7 +23,20 @@ ImageComplex::ImageComplex(const ImageComplex & other) : ImageComplex(other.m_ro
             m_dataR[r][c] = other.m_dataR[r][c];
             m_dataI[r][c] = other.m_dataI[r][c];
         }
-};
+}
+
+ImageComplex& ImageComplex::operator=(const ImageComplex & rhs) {
+    //only defined if two images have same size
+    assert(m_rows == rhs.m_rows && m_cols == rhs.m_cols);
+
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c) {
+            m_dataR[r][c] = rhs.m_dataR[r][c];
+            m_dataI[r][c] = rhs.m_dataI[r][c];
+        }
+
+    return *this;
+}
 
 //creates complex image from ImageType variable
 
@@ -82,7 +95,7 @@ void ImageComplex::getPixelVal(int row, int col, float & valR, float & valI) con
 
 //function to copy data to ImageType variable. All non integer values are rounded down
 
-void ImageComplex::copytoImageType(ImageType & imgR, ImageType & imgI, bool normalize) const {
+void ImageComplex::getImageType(ImageType & imgR, ImageType & imgI, bool normalize) const {
     //get image info and ensure it is good
     int rowsR, rowsI, colsR, colsI, q;
     imgR.getImageInfo(rowsR, colsR, q);
@@ -152,6 +165,18 @@ void ImageComplex::applyFFT(bool forward) {
         for (int c = 0; c < m_cols; ++c) {
             m_dataR[r][c] = dataR[r * extendedR + c] * (((r + c) % 2) ? 1 : -1);
             m_dataI[r][c] = dataI[r * extendedR + c] * (((r + c) % 2) ? 1 : -1);
+        }
+}
+
+//function to apply point by point complex multiplication
+
+void ImageComplex::complexMultiplation(const ImageComplex & mask) {
+    assert(m_rows == mask.m_rows && m_cols == mask.m_cols);
+
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c) {
+            m_dataR[r][c] = m_dataR[r][c] * mask.m_dataR[r][c] - m_dataI[r][c] * mask.m_dataI[r][c];
+            m_dataI[r][c] = m_dataR[r][c] * mask.m_dataI[r][c] + m_dataI[r][c] * mask.m_dataR[r][c];
         }
 }
 

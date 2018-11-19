@@ -6,6 +6,10 @@
 #include <iostream>
 #include <string>
 
+//function to take ComplexImage (in spatial domain) and computes the blurred image (in spatial domain).
+//uses degradation model discussed in class and in the book
+void getMotionBlurred(const ImageComplex & img, ImageComplex & blurredImg);
+
 int main(int argc, char * argv[]) {
 
     std::cout << std::endl << "Experiment 3" << std::endl;
@@ -22,14 +26,65 @@ int main(int argc, char * argv[]) {
     ImageType imgI(imgRows, imgCols, Q);
     ImageComplex img(imgSpatial, imgI); //use ImageComplex class for simplicity
 
-    img.applyFFT(true); //apply forward FFT
-
-    img.applyFFT(false); //apply inverse FFT 
-
-    //save real part of filtered image
-    ImageType imgFilteredR(imgRows, imgCols, Q), imgFilteredI(imgRows, imgCols, Q);
-    img.copytoImageType(imgFilteredR, imgFilteredI);
-    writeImage("images/PA04/Experiment3/lena_filtered.pgm", imgFilteredR);
+    //get spatial domain representation of blurred image
+    ImageComplex blurredImg(imgRows, imgCols);
+    getMotionBlurred(img, blurredImg);
 
     return 0;
+}
+
+//function that creates motion blur mask in frequency domain. Follows given formula and makes sure mask is centered
+
+void createMotionBlurFilter(ImageComplex & img, float a = 0.1, float b = 0.1, float T = 1.0) {
+    int imgRows, imgCols;
+    img.getImageInfo(imgRows, imgCols);
+
+    for (int r = 0; r < imgRows; ++r)
+        for (int c = 0; c < imgCols; ++c) {
+            int u = r - imgRows / 2, v = c - imgCols / 2; //u and v coordinates of point
+            float x = M_PI * (u * a + v * b); //repeating part of motion blur formula
+            float valR = 1;
+            float valI = 0;
+            if (x != 0) { //ensure we don't divide by zero
+                valR = (T / x) * std::sin(x) * std::cos(x);
+                valI = -(T / x) * std::sin(x) * std::sin(x);
+            }
+            img.setPixelVal(r, c, valR, valI); //set new value
+        }
+}
+
+//function to take ComplexImage (in spatial domain) and computes the blurred image (in spatial domain).
+//uses degradation model discussed in class and in the book
+
+void getMotionBlurred(const ImageComplex & img, ImageComplex & blurredImg) {
+    ImageComplex imgCpy(img);
+    int imgRows, imgCols, Q = 255;
+    imgCpy.getImageInfo(imgRows, imgCols);
+
+    imgCpy.applyFFT(true); //apply forward FFT
+
+    //save spectrum of original image for visualization
+    ImageType imgSpectrum(imgRows, imgCols, Q);
+    imgCpy.getSpectrum(imgSpectrum);
+    writeImage("images/PA04/Experiment3/lenna_spectrum.pgm", imgSpectrum);
+
+    //create motion blur mask
+    ImageComplex blurMask(imgRows, imgCols);
+    createMotionBlurFilter(blurMask);
+
+    //apply motion blur to image in frequency domain
+    blurredImg = imgCpy;
+    blurredImg.complexMultiplation(blurMask); //do complex multiplication
+
+    //save spectrum of blurred image for visualization
+    ImageType imgBlurredSpectrum(imgRows, imgCols, Q);
+    blurredImg.getSpectrum(imgBlurredSpectrum);
+    writeImage("images/PA04/Experiment3/lenn_blurred_spectrum.pgm", imgBlurredSpectrum);
+
+    blurredImg.applyFFT(false); //apply inverse FFT to blurred image to get to spatial domain
+
+    //save real part of blurred image for visualization/verification
+    ImageType imgBlurredR(imgRows, imgCols, Q), imgBlurredI(imgRows, imgCols, Q);
+    blurredImg.getImageType(imgBlurredR, imgBlurredI);
+    writeImage("images/PA04/Experiment3/lena_blurred.pgm", imgBlurredR);
 }

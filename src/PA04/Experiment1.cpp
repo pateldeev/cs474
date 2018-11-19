@@ -82,7 +82,7 @@ int main(int argc, char * argv[]) {
 
     //save real part of filtered image
     ImageType imgFilteredR(imgRows, imgCols, Q), imgFilteredI(imgRows, imgCols, Q);
-    img.copytoImageType(imgFilteredR, imgFilteredI);
+    img.getImageType(imgFilteredR, imgFilteredI);
     writeImage("images/PA04/Experiment1/boy_filtered.pgm", imgFilteredR);
 
     return 0; //done
