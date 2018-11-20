@@ -18,6 +18,9 @@ public:
     void setPixelVal(int row, int col, float valR, float valI);
     void getPixelVal(int row, int col, float & valR, float & valI) const;
 
+    //adds pixel values of two images
+    void operator+=(const ImageComplex & other);
+
     //function to copy data to ImageType variable. All non integer values are rounded down
     void getImageType(ImageType & imgR, ImageType & imgI, bool normalize = true) const;
 
@@ -28,7 +31,11 @@ public:
     void applyFFT(bool forward = true);
 
     //function to apply point by point complex multiplication
-    void complexMultiplation(const ImageComplex & mask);
+    //negative cutOffRadius means to multiple entire spectrum
+    void complexMultiplation(const ImageComplex & mask, int cutoffRadius = -1);
+
+    //function to compute complex multiplicative inverse - needed to do division for inverse filtering
+    void complexInverse(void);
 
     //function to print pixel values. Useful for debugging
     void printPixelValues(void) const;

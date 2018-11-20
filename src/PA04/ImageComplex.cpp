@@ -14,6 +14,12 @@ ImageComplex::ImageComplex(int rows, int cols) : m_rows(rows), m_cols(cols), m_d
         m_dataR[r] = new float[m_cols];
         m_dataI[r] = new float[m_cols];
     }
+
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c) {
+            m_dataR[r][c] = 0.f;
+            m_dataI[r][c] = 0.f;
+        }
 }
 
 ImageComplex::ImageComplex(const ImageComplex & other) : ImageComplex(other.m_rows, other.m_cols) {
@@ -93,6 +99,19 @@ void ImageComplex::getPixelVal(int row, int col, float & valR, float & valI) con
     valI = m_dataI[row][col];
 }
 
+//adds pixel values of two images
+
+void ImageComplex::operator+=(const ImageComplex & other) {
+    //only defined if two images have same size
+    assert(m_rows == other.m_rows && m_cols == other.m_cols);
+
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c) {
+            m_dataR[r][c] += other.m_dataR[r][c];
+            m_dataI[r][c] += other.m_dataI[r][c];
+        }
+}
+
 //function to copy data to ImageType variable. All non integer values are rounded down
 
 void ImageComplex::getImageType(ImageType & imgR, ImageType & imgI, bool normalize) const {
@@ -149,7 +168,7 @@ void ImageComplex::applyFFT(bool forward) {
     //move data into usable form - make sure to extend data to power of 2 for FFT
     int extendedR = std::pow(2, std::ceil(log(m_rows) / std::log(2)));
     int extendedC = std::pow(2, std::ceil(log(m_cols) / std::log(2)));
-    std::vector<float> dataR(extendedR * extendedC), dataI(extendedR * extendedC);
+    std::vector<float> dataR(extendedR * extendedC, 0.f), dataI(extendedR * extendedC, 0.f);
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c) {
             //copy over data. Invert signs as necessary for shifting
@@ -168,15 +187,36 @@ void ImageComplex::applyFFT(bool forward) {
         }
 }
 
-//function to apply point by point complex multiplication
+//function to apply point by point complex multiplication. 
+//negative cutOffRadius means to multiple entire spectrum
 
-void ImageComplex::complexMultiplation(const ImageComplex & mask) {
+void ImageComplex::complexMultiplation(const ImageComplex & mask, int cutoffRadius) {
+    //only defined if two images have same size
     assert(m_rows == mask.m_rows && m_cols == mask.m_cols);
 
+    float tempR, tempI;
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c) {
-            m_dataR[r][c] = m_dataR[r][c] * mask.m_dataR[r][c] - m_dataI[r][c] * mask.m_dataI[r][c];
-            m_dataI[r][c] = m_dataR[r][c] * mask.m_dataI[r][c] + m_dataI[r][c] * mask.m_dataR[r][c];
+            int u = r - m_rows / 2, v = c - m_cols / 2; //u and v coordinates of point
+            if (cutoffRadius < 0 || std::sqrt(u * u + v * v) <= cutoffRadius) {
+                tempR = m_dataR[r][c] * mask.m_dataR[r][c] - m_dataI[r][c] * mask.m_dataI[r][c];
+                tempI = m_dataR[r][c] * mask.m_dataI[r][c] + m_dataI[r][c] * mask.m_dataR[r][c];
+                m_dataR[r][c] = tempR;
+                m_dataI[r][c] = tempI;
+            }
+        }
+}
+
+//function to compute complex multiplicative inverse - needed to do division for inverse filtering
+
+void ImageComplex::complexInverse(void) {
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c) {
+
+            float x = m_dataR[r][c] * m_dataR[r][c] + m_dataI[r][c] * m_dataI[r][c];
+            assert(x != 0.f);
+            m_dataR[r][c] /= x;
+            m_dataI[r][c] /= -x;
         }
 }
 
