@@ -9,8 +9,11 @@
  */
 
 #include <math.h>
+#include <stdlib.h>
 
-extern float ranf(); /* ranf() is uniform in 0..1 */
+inline float ranf(void) {/* ranf() is uniform in 0..1 */
+    return static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
+}
 
 inline float box_muller(float m, float s) /* normal random variate generator */ { /* mean m, standard deviation s */
     float x1, x2, w, y1;
