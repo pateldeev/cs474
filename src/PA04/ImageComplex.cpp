@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <assert.h>
 
 ImageComplex::ImageComplex(int rows, int cols) : m_rows(rows), m_cols(cols), m_dataR(nullptr), m_dataI(nullptr) {
@@ -16,10 +17,8 @@ ImageComplex::ImageComplex(int rows, int cols) : m_rows(rows), m_cols(cols), m_d
     }
 
     for (int r = 0; r < m_rows; ++r)
-        for (int c = 0; c < m_cols; ++c) {
-            m_dataR[r][c] = 0.f;
-            m_dataI[r][c] = 0.f;
-        }
+        for (int c = 0; c < m_cols; ++c)
+            m_dataR[r][c] = m_dataI[r][c] = 0.f;
 }
 
 ImageComplex::ImageComplex(const ImageComplex & other) : ImageComplex(other.m_rows, other.m_cols) {
@@ -90,6 +89,10 @@ void ImageComplex::getImageInfo(int & rows, int & cols) const {
 }
 
 void ImageComplex::setPixelVal(int row, int col, float valR, float valI) {
+    if (valR == -0.f)
+        valR = 0.0;
+    if (valI == -0.f)
+        valI = 0.0;
     m_dataR[row][col] = valR;
     m_dataI[row][col] = valI;
 }
@@ -110,6 +113,20 @@ void ImageComplex::operator+=(const ImageComplex & other) {
             m_dataR[r][c] += other.m_dataR[r][c];
             m_dataI[r][c] += other.m_dataI[r][c];
         }
+}
+
+
+//adds constant value to image - needed for wiener filtering
+
+ImageComplex ImageComplex::operator+(float val) const {
+    ImageComplex sum(*this);
+
+    //add value to each pixel
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c)
+            sum.m_dataR[r][c] += val;
+
+    return sum;
 }
 
 //function to copy data to ImageType variable. All non integer values are rounded down
@@ -162,6 +179,34 @@ void ImageComplex::getSpectrum(ImageType & spectrum, bool normalize) const {
         Helper::remapValues(spectrum);
 }
 
+void ImageComplex::test(ImageType & spectrum) const {
+    std::vector<float> vals;
+    vals.resize(m_rows * m_cols);
+
+    //function to get spectrum value - applies log transformation
+    auto getNewVal = [](float real, float imaginary) ->float {
+        return std::sqrt(real * real + imaginary * imaginary);
+    };
+
+    for (int r = 0; r < m_rows; ++r) {
+        for (int c = 0; c < m_cols; ++c) {
+            vals[r * m_cols + c] = getNewVal(m_dataR[r][c], m_dataI[r][c]);
+        }
+    }
+
+    float min = *std::min_element(vals.begin(), vals.end());
+    float max = *std::max_element(vals.begin(), vals.end());
+
+    for (float & f : vals)
+        f = 255 * (f - min) / (max - min);
+
+    for (int r = 0; r < m_rows; ++r) {
+        for (int c = 0; c < m_cols; ++c) {
+            spectrum.setPixelVal(r, c, (int) vals[r * m_cols + c]);
+        }
+    }
+}
+
 //function to apply 2D FFT to image. Note the function internally shifts the magnitude
 
 void ImageComplex::applyFFT(bool forward) {
@@ -177,7 +222,7 @@ void ImageComplex::applyFFT(bool forward) {
         }
 
     //apply FFT
-    fft2D(extendedR, extendedC, &dataR[0], &dataI[0], (forward) ? -1 : 1);
+    fft2D(extendedR, extendedC, &dataR[0], &dataI[0], ((forward) ? -1 : 1));
 
     //save new values. Make sure to invert shifting transformation
     for (int r = 0; r < m_rows; ++r)
@@ -187,37 +232,45 @@ void ImageComplex::applyFFT(bool forward) {
         }
 }
 
-//function to apply point by point complex multiplication. 
-//negative cutOffRadius means to multiple entire spectrum
+//function to compute power spectrum of image - useful for Wiener filtering
 
-void ImageComplex::complexMultiplation(const ImageComplex & mask, int cutoffRadius) {
+void ImageComplex::powerSpectrum(void) {
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c) {
+            m_dataR[r][c] = m_dataR[r][c] * m_dataR[r][c] + m_dataI[r][c] * m_dataI[r][c];
+            m_dataI[r][c] = 0;
+        }
+}
+
+//function to apply point by point complex multiplication. 
+
+void ImageComplex::complexMultiplication(const ImageComplex & rhs, const float cutoffRadius) {
     //only defined if two images have same size
-    assert(m_rows == mask.m_rows && m_cols == mask.m_cols);
+    assert(m_rows == rhs.m_rows && m_cols == rhs.m_cols);
 
     float tempR, tempI;
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c) {
-            int u = r - m_rows / 2, v = c - m_cols / 2; //u and v coordinates of point
+            int u = c - m_cols / 2, v = m_rows / 2 - r; //u and v coordinates of pixel
             if (cutoffRadius < 0 || std::sqrt(u * u + v * v) <= cutoffRadius) {
-                tempR = m_dataR[r][c] * mask.m_dataR[r][c] - m_dataI[r][c] * mask.m_dataI[r][c];
-                tempI = m_dataR[r][c] * mask.m_dataI[r][c] + m_dataI[r][c] * mask.m_dataR[r][c];
-                m_dataR[r][c] = tempR;
-                m_dataI[r][c] = tempI;
+                tempR = m_dataR[r][c] * rhs.m_dataR[r][c] - m_dataI[r][c] * rhs.m_dataI[r][c];
+                tempI = m_dataR[r][c] * rhs.m_dataI[r][c] + m_dataI[r][c] * rhs.m_dataR[r][c];
+                m_dataR[r][c] = tempR, m_dataI[r][c] = tempI;
             }
         }
 }
 
+
 //function to compute complex multiplicative inverse - needed to do division for inverse filtering
 
-void ImageComplex::complexInverse(void) {
+ImageComplex& ImageComplex::complexInverse(const float threshold) {
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c) {
-
             float x = m_dataR[r][c] * m_dataR[r][c] + m_dataI[r][c] * m_dataI[r][c];
-            assert(x != 0.f);
-            m_dataR[r][c] /= x;
-            m_dataI[r][c] /= -x;
+            if (x > threshold)
+                m_dataR[r][c] /= x, m_dataI[r][c] /= -x;
         }
+    return *this;
 }
 
 //function to print pixel values. Useful for debugging

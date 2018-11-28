@@ -21,6 +21,9 @@ public:
     //adds pixel values of two images
     void operator+=(const ImageComplex & other);
 
+    //adds constant value to image - needed for wiener filtering
+    ImageComplex operator+(float val) const;
+
     //function to copy data to ImageType variable. All non integer values are rounded down
     void getImageType(ImageType & imgR, ImageType & imgI, bool normalize = true) const;
 
@@ -30,15 +33,20 @@ public:
     //function to apply 2D FFT to image. Note the function internally shifts the magnitude
     void applyFFT(bool forward = true);
 
+    //function to compute power spectrum of image - useful for Wiener filtering
+    void powerSpectrum(void);
+
     //function to apply point by point complex multiplication
     //negative cutOffRadius means to multiple entire spectrum
-    void complexMultiplation(const ImageComplex & mask, int cutoffRadius = -1);
+    void complexMultiplication(const ImageComplex & rhs, const float cutoffRadius = -1);
 
     //function to compute complex multiplicative inverse - needed to do division for inverse filtering
-    void complexInverse(void);
+    ImageComplex& complexInverse(const float threshold = 0.f);
 
     //function to print pixel values. Useful for debugging
     void printPixelValues(void) const;
+
+    void test(ImageType & spectrum) const;
 
 private:
     int m_rows;

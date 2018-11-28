@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 //function to change the values in a specific row of an image over the given range of columns
 

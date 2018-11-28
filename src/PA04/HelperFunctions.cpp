@@ -110,6 +110,14 @@ void Helper::remapValues(ImageType & img) {
     int rows, cols, levels;
     img.getImageInfo(rows, cols, levels); //get image information
 
+    //check if values are uniform
+    if (currMin == currMax) {
+        for (int r = 0; r < rows; ++r)
+            for (int c = 0; c < cols; ++c)
+                img.setPixelVal(r, c, 0);
+        return;
+    }
+
     int currVal, newVal;
     for (int r = 0; r < rows; ++r)
         for (int c = 0; c < cols; ++c) {
