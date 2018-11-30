@@ -3,23 +3,24 @@
 #include "FFT/fft2D.c"
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <algorithm>
 #include <assert.h>
+
+//Constructs image to hold specified number of values
 
 ImageComplex::ImageComplex(int rows, int cols) : m_rows(rows), m_cols(cols), m_dataR(nullptr), m_dataI(nullptr) {
     //allocate space for real and imaginary parts of data
     m_dataR = new float* [m_rows];
     m_dataI = new float* [m_rows];
     for (int r = 0; r < m_rows; ++r) {
-        m_dataR[r] = new float[m_cols];
-        m_dataI[r] = new float[m_cols];
+        m_dataR[r] = new float[m_cols]();
+        m_dataI[r] = new float[m_cols]();
     }
-
-    for (int r = 0; r < m_rows; ++r)
-        for (int c = 0; c < m_cols; ++c)
-            m_dataR[r][c] = m_dataI[r][c] = 0.f;
 }
+
+//Constructs image by copying over values from existing image.
 
 ImageComplex::ImageComplex(const ImageComplex & other) : ImageComplex(other.m_rows, other.m_cols) {
     //copy over data values
@@ -30,20 +31,8 @@ ImageComplex::ImageComplex(const ImageComplex & other) : ImageComplex(other.m_ro
         }
 }
 
-ImageComplex& ImageComplex::operator=(const ImageComplex & rhs) {
-    //only defined if two images have same size
-    assert(m_rows == rhs.m_rows && m_cols == rhs.m_cols);
-
-    for (int r = 0; r < m_rows; ++r)
-        for (int c = 0; c < m_cols; ++c) {
-            m_dataR[r][c] = rhs.m_dataR[r][c];
-            m_dataI[r][c] = rhs.m_dataI[r][c];
-        }
-
-    return *this;
-}
-
-//creates complex image from ImageType variable
+//Constructs image from pixel values from ImageType variables.
+//imgR and imgI must have same size.
 
 ImageComplex::ImageComplex(const ImageType & imgR, const ImageType & imgI) : m_rows(0), m_cols(0), m_dataR(nullptr), m_dataI(nullptr) {
     //get image info and ensure it is good
@@ -51,8 +40,7 @@ ImageComplex::ImageComplex(const ImageType & imgR, const ImageType & imgI) : m_r
     imgR.getImageInfo(rowsR, colsR, q);
     imgI.getImageInfo(rowsI, colsI, q);
     assert(rowsR == rowsI && colsR == colsI);
-    m_rows = rowsR;
-    m_cols = colsR;
+    m_rows = rowsR, m_cols = colsR;
 
     //allocate space for real and imaginary parts of data
     m_dataR = new float* [m_rows];
@@ -68,10 +56,12 @@ ImageComplex::ImageComplex(const ImageType & imgR, const ImageType & imgI) : m_r
         for (int c = 0; c < m_cols; ++c) {
             imgR.getPixelVal(r, c, tempR);
             imgI.getPixelVal(r, c, tempI);
-            m_dataR[r][c] = (float) tempR;
-            m_dataI[r][c] = (float) tempI;
+            m_dataR[r][c] = float(tempR);
+            m_dataI[r][c] = float(tempI);
         }
 }
+
+//Deallocate memory holding pixel data.
 
 ImageComplex::~ImageComplex(void) {
     //free up used space
@@ -83,26 +73,22 @@ ImageComplex::~ImageComplex(void) {
     delete[] m_dataI;
 }
 
-void ImageComplex::getImageInfo(int & rows, int & cols) const {
-    rows = m_rows;
-    cols = m_cols;
+//Copies over pixel values - rhs must have same size of image.
+
+ImageComplex& ImageComplex::operator=(const ImageComplex & rhs) {
+    //only defined if two images have same size
+    assert(m_rows == rhs.m_rows && m_cols == rhs.m_cols);
+
+    for (int r = 0; r < m_rows; ++r)
+        for (int c = 0; c < m_cols; ++c) {
+            m_dataR[r][c] = rhs.m_dataR[r][c];
+            m_dataI[r][c] = rhs.m_dataI[r][c];
+        }
+
+    return *this;
 }
 
-void ImageComplex::setPixelVal(int row, int col, float valR, float valI) {
-    if (valR == -0.f)
-        valR = 0.0;
-    if (valI == -0.f)
-        valI = 0.0;
-    m_dataR[row][col] = valR;
-    m_dataI[row][col] = valI;
-}
-
-void ImageComplex::getPixelVal(int row, int col, float & valR, float & valI) const {
-    valR = m_dataR[row][col];
-    valI = m_dataI[row][col];
-}
-
-//adds pixel values of two images
+//Adds pixel values of other image - other must have same size.
 
 void ImageComplex::operator+=(const ImageComplex & other) {
     //only defined if two images have same size
@@ -116,23 +102,32 @@ void ImageComplex::operator+=(const ImageComplex & other) {
 }
 
 
-//adds constant value to image - needed for wiener filtering
+//Adds constant to real parts - needed for Wiener filtering.
 
-ImageComplex ImageComplex::operator+(float val) const {
+ImageComplex ImageComplex::operator+(float valReal) const {
     ImageComplex sum(*this);
 
-    //add value to each pixel
+    //add value to real part of each pixel
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c)
-            sum.m_dataR[r][c] += val;
+            sum.m_dataR[r][c] += valReal;
 
     return sum;
 }
 
-//function to copy data to ImageType variable. All non integer values are rounded down
+//Get size of image.
+
+void ImageComplex::getImageInfo(int & rows, int & cols) const {
+    rows = m_rows;
+    cols = m_cols;
+}
+
+//Copy pixel data to ImageType variables. 
+//All non integer values are rounded down.
+//imgR and imgI must have same size as image.
 
 void ImageComplex::getImageType(ImageType & imgR, ImageType & imgI, bool normalize) const {
-    //get image info and ensure it is good
+    //get image info and ensure it is valid
     int rowsR, rowsI, colsR, colsI, q;
     imgR.getImageInfo(rowsR, colsR, q);
     imgI.getImageInfo(rowsI, colsI, q);
@@ -155,10 +150,12 @@ void ImageComplex::getImageType(ImageType & imgR, ImageType & imgI, bool normali
     }
 }
 
-//function to get spectrum of image as ImageType variable
+//Get spectrum of image as ImageType variable.
+//Applies log transformation: log(1+val).
+//spectrum must have same size as image.
 
 void ImageComplex::getSpectrum(ImageType & spectrum, bool normalize) const {
-    //get image info and ensure it is good
+    //get image info and ensure it is valid
     int spectrumR, spectrumC, q;
     spectrum.getImageInfo(spectrumR, spectrumC, q);
     assert(spectrumR == m_rows && spectrumC == m_cols);
@@ -179,35 +176,24 @@ void ImageComplex::getSpectrum(ImageType & spectrum, bool normalize) const {
         Helper::remapValues(spectrum);
 }
 
-void ImageComplex::test(ImageType & spectrum) const {
-    std::vector<float> vals;
-    vals.resize(m_rows * m_cols);
+//Get real and imaginary value at specific pixel.
 
-    //function to get spectrum value - applies log transformation
-    auto getNewVal = [](float real, float imaginary) ->float {
-        return std::sqrt(real * real + imaginary * imaginary);
-    };
-
-    for (int r = 0; r < m_rows; ++r) {
-        for (int c = 0; c < m_cols; ++c) {
-            vals[r * m_cols + c] = getNewVal(m_dataR[r][c], m_dataI[r][c]);
-        }
-    }
-
-    float min = *std::min_element(vals.begin(), vals.end());
-    float max = *std::max_element(vals.begin(), vals.end());
-
-    for (float & f : vals)
-        f = 255 * (f - min) / (max - min);
-
-    for (int r = 0; r < m_rows; ++r) {
-        for (int c = 0; c < m_cols; ++c) {
-            spectrum.setPixelVal(r, c, (int) vals[r * m_cols + c]);
-        }
-    }
+void ImageComplex::getPixelVal(int row, int col, float & re, float & im) const {
+    re = m_dataR[row][col];
+    im = m_dataI[row][col];
 }
 
-//function to apply 2D FFT to image. Note the function internally shifts the magnitude
+
+//Set real and imaginary value at specific pixel.
+
+void ImageComplex::setPixelVal(int row, int col, float re, float im) {
+    if (re == -0.f) re = 0.0;
+    if (im == -0.f) im = 0.0;
+    m_dataR[row][col] = re;
+    m_dataI[row][col] = im;
+}
+
+//Apply 2D FFT to image. Note the function internally shifts the magnitude.
 
 void ImageComplex::applyFFT(bool forward) {
     //move data into usable form - make sure to extend data to power of 2 for FFT
@@ -232,7 +218,7 @@ void ImageComplex::applyFFT(bool forward) {
         }
 }
 
-//function to compute power spectrum of image - useful for Wiener filtering
+//Compute power spectrum of image. Useful for Wiener filtering.
 
 void ImageComplex::powerSpectrum(void) {
     for (int r = 0; r < m_rows; ++r)
@@ -242,17 +228,19 @@ void ImageComplex::powerSpectrum(void) {
         }
 }
 
-//function to apply point by point complex multiplication. 
+//Apply point-by-point complex multiplication.
+//rhs must have same size as image.
+//Negative cutOffRadius means to multiply entire spectrum. 
 
-void ImageComplex::complexMultiplication(const ImageComplex & rhs, const float cutoffRadius) {
+void ImageComplex::complexMultiplication(const ImageComplex & rhs, const float cutoffR) {
     //only defined if two images have same size
     assert(m_rows == rhs.m_rows && m_cols == rhs.m_cols);
 
     float tempR, tempI;
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c) {
-            int u = c - m_cols / 2, v = m_rows / 2 - r; //u and v coordinates of pixel
-            if (cutoffRadius < 0 || std::sqrt(u * u + v * v) <= cutoffRadius) {
+            int u = r - m_rows / 2, v = c - m_cols / 2; //u and v coordinates of pixel; //u and v coordinates of pixel
+            if (cutoffR < 0 || std::sqrt(u * u + v * v) <= cutoffR) {
                 tempR = m_dataR[r][c] * rhs.m_dataR[r][c] - m_dataI[r][c] * rhs.m_dataI[r][c];
                 tempI = m_dataR[r][c] * rhs.m_dataI[r][c] + m_dataI[r][c] * rhs.m_dataR[r][c];
                 m_dataR[r][c] = tempR, m_dataI[r][c] = tempI;
@@ -261,25 +249,40 @@ void ImageComplex::complexMultiplication(const ImageComplex & rhs, const float c
 }
 
 
-//function to compute complex multiplicative inverse - needed to do division for inverse filtering
+//Compute complex multiplicative inverse. Needed to do division.
+//Returns calling image for chaining with multiplication.
 
-ImageComplex& ImageComplex::complexInverse(const float threshold) {
+ImageComplex& ImageComplex::complexInverse(void) {
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c) {
             float x = m_dataR[r][c] * m_dataR[r][c] + m_dataI[r][c] * m_dataI[r][c];
-            if (x > threshold)
+            if (x != 0.f)
                 m_dataR[r][c] /= x, m_dataI[r][c] /= -x;
         }
     return *this;
 }
 
-//function to print pixel values. Useful for debugging
+//Print pixel values to screen. Useful for debugging.
+//Will print to screen if fileName is empty.
 
-void ImageComplex::printPixelValues(void) const {
-    for (int r = 0; r < m_rows; ++r) {
-        std::cout << std::endl << " | ";
-        for (int c = 0; c < m_cols; ++c)
-            std::cout << m_dataR[r][c] << "+j" << m_dataI[r][c] << " | ";
+void ImageComplex::printPixelValues(const char * fileName) const {
+    if (!fileName) { //print to terminal
+        for (int r = 0; r < m_rows; ++r) {
+            std::cout << std::endl << " | ";
+            for (int c = 0; c < m_cols; ++c)
+                std::cout << m_dataR[r][c] << "+j" << m_dataI[r][c] << " | ";
+        }
+        std::cout << std::endl;
+    } else { //print to text file
+        std::ofstream file(fileName);
+
+        for (int r = 0; r < m_rows; ++r) {
+            file << std::endl << " | ";
+            for (int c = 0; c < m_cols; ++c)
+                file << m_dataR[r][c] << "+j" << m_dataI[r][c] << " | ";
+        }
+        file << std::endl;
+
+        file.close();
     }
-    std::cout << std::endl;
 }

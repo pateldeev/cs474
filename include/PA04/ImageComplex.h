@@ -3,52 +3,71 @@
 
 #include "Image.h"
 
-//Like ImageType, but able to hold real and imaginary parts. Also stores floating point values instead of integers. Useful for frequency domain image representations
-
 class ImageComplex {
 public:
+
+    //Constructs image to hold specified number of values
     ImageComplex(int rows, int cols);
+
+    //Constructs image by copying over values from existing image.
     ImageComplex(const ImageComplex & other);
-    ImageComplex& operator=(const ImageComplex & rhs);
-    ImageComplex(const ImageType & imgR, const ImageType & imgI); //creates complex image from ImageType variables
+
+    //Constructs image from pixel values from ImageType variables.
+    //imgR and imgI must have same size.
+    ImageComplex(const ImageType & imgR, const ImageType & imgI);
+
+    //Deallocate memory holding pixel data.
     ~ImageComplex(void);
 
-    void getImageInfo(int & rows, int & cols) const;
+    //Copies over pixel values - rhs must have same size of image.
+    ImageComplex& operator=(const ImageComplex & rhs);
 
-    void setPixelVal(int row, int col, float valR, float valI);
-    void getPixelVal(int row, int col, float & valR, float & valI) const;
-
-    //adds pixel values of two images
+    //Adds pixel values of other image - other must have same size.
     void operator+=(const ImageComplex & other);
 
-    //adds constant value to image - needed for wiener filtering
-    ImageComplex operator+(float val) const;
+    //Adds constant to real parts - needed for Wiener filtering.
+    ImageComplex operator+(float valReal) const;
 
-    //function to copy data to ImageType variable. All non integer values are rounded down
+    //Get size of image.
+    void getImageInfo(int & rows, int & cols) const;
+
+    //Copy pixel data to ImageType variables. 
+    //All non integer values are rounded down.
+    //imgR and imgI must have same size as image.
     void getImageType(ImageType & imgR, ImageType & imgI, bool normalize = true) const;
 
-    //function to get spectrum of image as ImageType variable - applies log transformation: log(1+val)
+    //Get spectrum of image as ImageType variable.
+    //Applies log transformation: log(1+val).
+    //spectrum must have same size as image.
     void getSpectrum(ImageType & spectrum, bool normalize = true) const;
 
-    //function to apply 2D FFT to image. Note the function internally shifts the magnitude
+    //Get real and imaginary value at specific pixel.
+    void getPixelVal(int row, int col, float & re, float & im) const;
+
+    //Set real and imaginary value at specific pixel.
+    void setPixelVal(int row, int col, float re, float im);
+
+    //Apply 2D FFT to image. Note the function internally shifts the magnitude.
     void applyFFT(bool forward = true);
 
-    //function to compute power spectrum of image - useful for Wiener filtering
+    //Compute power spectrum of image. Useful for Wiener filtering.
     void powerSpectrum(void);
 
-    //function to apply point by point complex multiplication
-    //negative cutOffRadius means to multiple entire spectrum
-    void complexMultiplication(const ImageComplex & rhs, const float cutoffRadius = -1);
+    //Apply point-by-point complex multiplication.
+    //rhs must have same size as image.
+    //Negative cutOffRadius means to multiply entire spectrum.
+    void complexMultiplication(const ImageComplex & rhs, const float cutoffR = -1);
 
-    //function to compute complex multiplicative inverse - needed to do division for inverse filtering
-    ImageComplex& complexInverse(const float threshold = 0.f);
+    //Compute complex multiplicative inverse. Needed to do division.
+    //Returns calling image for chaining with multiplication.
+    ImageComplex& complexInverse(void);
 
-    //function to print pixel values. Useful for debugging
-    void printPixelValues(void) const;
-
-    void test(ImageType & spectrum) const;
+    //Print pixel values to screen. Useful for debugging.
+    //Will print to screen if fileName is empty.
+    void printPixelValues(const char * fileName = nullptr) const;
 
 private:
+
     int m_rows;
     int m_cols;
 

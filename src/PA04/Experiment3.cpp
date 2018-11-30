@@ -14,91 +14,29 @@
 //Uses degradation model discussed in class and in the book.
 void getMotionBlurred(const ImageComplex & imgSpatial, ImageComplex & imgBlurredFrequency);
 
-//Function to take ComplexImage (in frequency domain) and add Gaussian noise (in frequency domain).
-//Uses the function given to generate noise values.
+//Function to take ComplexImage (in frequency domain) and add Gaussian noise (created in spatial domain).
+//Uses the given box_muller function given to generate noise values and returns frequency domain image.
 void addGaussianNoise(ImageComplex & imgFrequency, float mean, float standardDeviation);
 
 //Function to take degraded ComplexImage (in frequency domain) and restore it (to spatial domain) via inverse filtering.
 //Uses degradation model discussed in class and in the book.
-void applyInverse(const ImageComplex & imgDegradedFrequency, ImageComplex & imgRestoredSpatial, float cutoffRadius = -1, float threshold = 0);
+void applyInverse(const ImageComplex & imgDegradedFrequency, ImageComplex & imgRestoredSpatial, float cutoffRadius = -1);
 
 //Function to take degraded ComplexImage (in frequency domain) and restore it (to spatial domain) via wiener filtering.
 //Uses model discussed in class and in the book with provided K.
 void applyWiener(const ImageComplex & imgDegradedFrequency, ImageComplex & imgRestoredSpatial, float K);
 
-int main2() {
-    // Read input image
-    int imgNRows, imgBRows, imgNCols, imgBCols, Q;
-    bool type;
-    std::string fileN = "/home/dp/Downloads/book.pgm";
-    std::string fileB = "/home/dp/Downloads/bookBlur.pgm";
-    readImageHeader(fileN.c_str(), imgNRows, imgNCols, Q, type);
-    readImageHeader(fileB.c_str(), imgBRows, imgBCols, Q, type);
-    ImageType tempN(imgNRows, imgNCols, Q), tempB(imgBRows, imgBCols, Q);
-    readImage(fileN.c_str(), tempN);
-    readImage(fileB.c_str(), tempB);
-
-    ImageType imgN(512, 512, 255), imgB(512, 512, 255);
-
-    int tempValN, tempValB;
-    for (int r = 0; r < 512; ++r) {
-        for (int c = 0; c < 512; ++c) {
-            if (r < imgNRows && c < imgNCols)
-                tempN.getPixelVal(r, c, tempValN);
-            else
-                tempValN = 0;
-
-            if (r < imgBRows && c < imgBCols)
-                tempB.getPixelVal(r, c, tempValB);
-            else
-                tempValB = 0;
-
-            imgN.setPixelVal(r, c, tempValN);
-            imgB.setPixelVal(r, c, tempValB);
-        }
-    }
-
-    imgNRows = imgBRows = imgNCols = imgBRows = 512;
-    writeImage("images/PA04/Experiment3/testN.pgm", imgN);
-    writeImage("images/PA04/Experiment3/testB.pgm", imgB);
-
-    ImageType imgImaginary(imgNRows, imgNCols, Q);
-    ImageComplex imgCN(imgN, imgImaginary);
-    ImageComplex imgCB(imgB, imgImaginary);
-
-    imgCN.applyFFT(true);
-    imgCB.applyFFT(true);
-
-    ImageType imgSpec(imgNCols, imgNCols, Q);
-    imgCN.getSpectrum(imgSpec);
-    writeImage("images/PA04/Experiment3/testNSpec.pgm", imgSpec);
-    imgCB.getSpectrum(imgSpec);
-    writeImage("images/PA04/Experiment3/testBSpec.pgm", imgSpec);
-
-    float valR, valI;
-    imgCN.getPixelVal(256, 0, valR, valI);
-    std::cout << "N: " << valR << " +j" << valI << std::endl;
-    imgCB.getPixelVal(256, 0, valR, valI);
-    std::cout << "B: " << valR << " +j" << valI << std::endl;
-
-    imgCB.complexMultiplication(imgCN.complexInverse());
-    imgCB.getSpectrum(imgSpec);
-    writeImage("images/PA04/Experiment3/testHSpec.pgm", imgSpec);
-}
-
 int main(int argc, char * argv[]) {
     //main parameters for run
     const std::string imgFile = "images/PA04/Experiment3/lenna.pgm";
-    const float noiseMean = 0.f;
-    const float noiseStandardDeviation = 10.f;
-    const int inverseCutoffRadius = 20; //21;
-    const float inverseThreshold = 0; //0.005;
+    const float noiseMean = 0.f, noiseStandardDeviation = 10.f;
+    const int inverseCutoffRadius = 20;
     const float wienerK = 0.007;
 
     std::srand(time(nullptr));
     std::cout << std::endl << "Experiment 3" << std::endl;
 
-#define BOOK 0
+#define BOOK 1
 #if BOOK
     // Read input image
     int imgRows, imgCols, Q;
@@ -171,7 +109,7 @@ int main(int argc, char * argv[]) {
 
     //get spatial domain restored image from inverse filtering
     ImageComplex imgRestoredInverse(imgRows, imgCols);
-    applyInverse(imgNoiseFrequency, imgRestoredInverse, inverseCutoffRadius, inverseThreshold);
+    applyInverse(imgNoiseFrequency, imgRestoredInverse, inverseCutoffRadius);
 
     //compute and save real part of inverse restored image for visualization/verification
     ImageType imgRestoredInverseR(imgRows, imgCols, Q), imgRestoredInverseI(imgRows, imgCols, Q);
@@ -221,17 +159,15 @@ void createMotionBlurFilter(ImageComplex & blurrMaskFrequency, float a = 0.1, fl
 }
 #else
 
-void createMotionBlurFilter(ImageComplex & blurrMaskFrequency) {
+void createMotionBlurFilter(ImageComplex & blurrMaskFrequency, float a = 0.1, float b = 0.1, float T = 1.0) {
     int imgRows, imgCols;
     blurrMaskFrequency.getImageInfo(imgRows, imgCols);
-
-    const float a = 0.1, b = 0.1, T = 1.0;
 
     float valR, valI, si, co;
     for (int r = 0; r < imgRows; ++r)
         for (int c = 0; c < imgCols; ++c) {
-            int u = c - imgCols / 2, v = imgRows / 2 - r; //u and v coordinates of pixel
-            float x = u * a + v * b; //repeating part of formula
+            int u = r - imgRows / 2, v = c - imgCols / 2; //u and v coordinates of pixel
+            float x = u * a + v * b; //repeating part of formula; //repeating part of formula
 
             //normalize angle to 0-2 (pi)
             float an = std::fmod(x, 2);
@@ -252,10 +188,10 @@ void createMotionBlurFilter(ImageComplex & blurrMaskFrequency) {
 
             if (x != 0.f) { //ensure we don't divide by zero
                 //real and imaginary value according to formula
-                valR = (T / (M_PI * x)) * si * co;
-                valI = -(T / (M_PI * x)) * si * si;
+                valR = (1 / (M_PI * x)) * si * co;
+                valI = -(1 / (M_PI * x)) * si * si;
             } else { //value due to limits of formula
-                valR = T * co, valI = T * si;
+                valR = T, valI = 0;
             }
 
             blurrMaskFrequency.setPixelVal(r, c, valR, valI); //set new value
@@ -282,18 +218,22 @@ void getMotionBlurred(const ImageComplex & imgSpatial, ImageComplex & imgBlurred
     ImageComplex blurMaskFrequency(imgRows, imgCols);
     createMotionBlurFilter(blurMaskFrequency);
 
-#if 1
-
-    int u = 5, v = 6;
-    int c = u + imgCols / 2, r = imgRows / 2 - v; //u and v coordinates of pixels
-    std::cout << r << "," << c;
-
-    float valR, valI;
-    blurMaskFrequency.getPixelVal(r, c, valR, valI);
-    std::cout << std::endl << valR << "," << valI;
-
+#if 0
     ImageComplex test(blurMaskFrequency);
     ImageType testSpec(imgRows, imgCols, 255);
+
+    for (int r = 0; r < 512; ++r)
+        for (int c = 0; c < 512; ++c) {
+            int u = r - 512 / 2, v = c - 512 / 2; //u and v coordinates of pixel
+            if (u == 201 && v == 0) {
+                float valR, valI;
+                test.getPixelVal(r, c, valR, valI);
+                std::cout << std::endl << "Value: " << std::sqrt(valR * valR + valI * valI);
+                img.getPixelVal(512 / 2, 512 / 2, valR, valI);
+                std::cout << std::endl << "Value: " << std::sqrt(valR * valR + valI * valI);
+            }
+        }
+
     test.test(testSpec);
     writeImage("images/PA04/Experiment3/maskSpec.pgm", testSpec);
 #endif
@@ -304,42 +244,23 @@ void getMotionBlurred(const ImageComplex & imgSpatial, ImageComplex & imgBlurred
 }
 
 
-//function to take ComplexImage (in frequency domain) and add Gaussian noise (in frequency domain)
-//uses the function given to generate noise values
+//Function to take ComplexImage (in frequency domain) and add Gaussian noise (created in spatial domain).
+//Uses the given box_muller function given to generate noise values and returns frequency domain image.
 
 void addGaussianNoise(ImageComplex & imgFrequency, float mean, float standardDeviation) {
     int imgRows, imgCols;
     imgFrequency.getImageInfo(imgRows, imgCols);
-    ImageComplex noiseFrequency(imgRows, imgCols);
 
-#if 1
-    ImageComplex img(imgFrequency);
-    img.applyFFT(false);
-    ImageType imgR(imgRows, imgCols, 255), imgI(imgRows, imgCols, 255);
-    img.getImageType(imgR, imgI);
-    writeImage("images/PA04/Experiment3/Noise_input.pgm", imgR);
-
-    int tempVal;
+    ImageType noiseR(imgRows, imgCols, 255), noiseI(imgRows, imgCols, 255);
+    //generate noisy image using given values in spatial domain
     for (int r = 0; r < imgRows; ++r)
         for (int c = 0; c < imgCols; ++c) {
-            imgR.getPixelVal(r, c, tempVal);
-            tempVal += box_muller(mean, standardDeviation);
-            imgR.setPixelVal(r, c, tempVal);
-        }
-    Helper::remapValues(imgR);
-
-    writeImage("images/PA04/Experiment3/Noise_output.pgm", imgR);
-
-#endif
-
-    //generate noisy image using given values
-    for (int r = 0; r < imgRows; ++r)
-        for (int c = 0; c < imgCols; ++c) {
-
             float noiseValR = box_muller(mean, standardDeviation);
-            float noiseValI = box_muller(mean, standardDeviation);
-            noiseFrequency.setPixelVal(r, c, noiseValR, noiseValI);
+            noiseR.setPixelVal(r, c, noiseValR);
         }
+
+    ImageComplex noiseFrequency(noiseR, noiseI);
+    noiseFrequency.applyFFT(true);
 
     imgFrequency += noiseFrequency; //add noise to original image
 }
@@ -347,7 +268,7 @@ void addGaussianNoise(ImageComplex & imgFrequency, float mean, float standardDev
 //function to take degraded ComplexImage (in frequency domain) and restore it (to spatial domain) via inverse filtering.
 //uses degradation model discussed in class and in the book.
 
-void applyInverse(const ImageComplex & imgDegradedFrequency, ImageComplex & imgRestoredSpatial, float cutoffRadius, float threshold) {
+void applyInverse(const ImageComplex & imgDegradedFrequency, ImageComplex & imgRestoredSpatial, float cutoffRadius) {
     int imgRows, imgCols;
     imgDegradedFrequency.getImageInfo(imgRows, imgCols);
     ImageComplex img(imgDegradedFrequency);
@@ -357,7 +278,7 @@ void applyInverse(const ImageComplex & imgDegradedFrequency, ImageComplex & imgR
     createMotionBlurFilter(blurMaskFrequency);
 
     //divide by motion degradation mask
-    img.complexMultiplication(blurMaskFrequency.complexInverse(threshold), cutoffRadius);
+    img.complexMultiplication(blurMaskFrequency.complexInverse(), cutoffRadius);
 
     //save spectrum of restored image for visualization
     ImageType imgRestoredSpectrum(imgRows, imgCols, 255);
