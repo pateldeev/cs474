@@ -1,4 +1,4 @@
-# UNR CS 474 - Image Processing
+# UNR CS 474 Fall 2018 - Image Processing Projects Repo
 
 ## Building with CMake
 ```bash
@@ -11,29 +11,37 @@ make
 ## Executables
 * ./Threshold 
   * Example threshold program given in class
-* Project # 1
+* Project # 1 - Sampling, Quantization, & Equalization
   * ./PA01_Equalization
-    *  For image equalization
+    * For image equalization
   * ./PA01_Sampling
-    *  For image sampling (changing spacial resolution)
+    * For image sampling (changing spacial resolution)
   * ./PA01_Quantization
-    *  For image quantization (reducing gray levels)
-* Project # 2
+    * For image quantization (changing gray levels)
+* Project # 2 - Spatial Domain Filtering
   * ./PA02_Correlation
-    *  For running correlation with a given mask
-  * ./PA02_Spatial
-    *  For running spatial filtering with a given mask
+    * For running correlation on image with mask
   * ./PA02_Median
-    *  For running median filtering with a given mask
-* Project # 3
+    * For running median filtering - for images corrupted by salt & pepper noise
+  * ./PA02_Sharpening
+    * For sharpening - calculated gradient & Laplacian edge images
+  * ./PA02_Spatial
+    * For smoothing - averaging and Gaussian
+* Project # 3 - The Discrete Fourier Transform
   * ./PA03_Experiment1
-    * 3 part program that computes 1D DFT
+    * For computing the 1D DFT using the FFT
+      * (a) computes DFT of test signal: [2, 3, 4, 4]
+      * (b) computes DFT of cosine wave: cos(2πux/N), u=8, N=128
+      * (c) computes DFT of rectangular pulse
   * ./PA03_Experiment2
-    * 3 part program that computes 2D DFT
-* Project # 4
+    * For computing the 2D DFT using the FFT
+      * (a) computes DFT 512x512 image with 32x32 square in center
+      * (b) computes DFT 512x512 image with 64x64 square in center
+      * (c) computes DFT 512x512 image with 128x128 square in center
+* Project # 4 - Frequency Domain Filtering
   * ./PA04_Experiment1
-    * Removes noise in the frequency domain
+    * For removing structured noise in the frequency domain using band reject filter
   * ./PA04_Experiment3
-    * Restores motion blurred & noisy images
+    * For modeling motion blur and restoring blurred & noisy images using inverse filtering and Wiener filtering
   * ./PA04_Experiment4
-    * Applys homomorphic filtering
+    * For applying homomorphic filtering to address uneven lighting
