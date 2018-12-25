@@ -29,14 +29,14 @@ void applyWiener(const ImageComplex & imgDegradedFrequency, ImageComplex & imgRe
 int main(int argc, char * argv[]) {
     //main parameters for run
     const std::string imgFile = "images/PA04/Experiment3/lenna.pgm";
-    const float noiseMean = 0.f, noiseStandardDeviation = 10.f;
-    const int inverseCutoffRadius = 20;
-    const float wienerK = 0.007;
+    const float noiseMean = 0.f, noiseStandardDeviation = 100.f;
+    const int inverseCutoffRadius = 100;
+    const float wienerK = 0.5;
 
     std::srand(time(nullptr));
     std::cout << std::endl << "Experiment 3" << std::endl;
 
-#define BOOK 1
+#define BOOK 0
 #if BOOK
     // Read input image
     int imgRows, imgCols, Q;

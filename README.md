@@ -1,4 +1,5 @@
-# UNR CS 474 Fall 2018 - Image Processing Projects Repo
+# UNR CS 474 Fall 2018 - Image Processing
+This project contains to source code for the various projects of the CS 474 image processing class for Fall 2018. See accompanying reports for details.
 
 ## Building with CMake
 ```bash
